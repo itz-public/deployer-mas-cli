@@ -15,6 +15,14 @@ spec:
       type: string
       description: "controls whether Maximo Manage and CP4D+Cognos is installed"
       default: "false"
+    - name: mas-install-iot
+      type: string
+      description: "install MAS iot"
+      default: "false"
+    - name: mas-install-monitor
+      type: string
+      description: "install MAS Monitor"
+      default: "false"
     - name: install-demo-data
       type: string
       description: "install demo data, adds 2+ hours to install time"
@@ -243,7 +251,7 @@ spec:
           - name: uds-lastname
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:7.14.0
+            image: quay.io/ibmmas/cli:7.18.0
             script: |
               #!/usr/bin/env bash
               # extract license id from license.dat
@@ -286,7 +294,7 @@ spec:
           - name: install-demo-data
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:7.14.0
+            image: quay.io/ibmmas/cli:7.18.0
             script: |
               #!/usr/bin/env bash
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
@@ -300,6 +308,7 @@ spec:
 
               export CPD_INSTALL_PLATFORM="true"
               export CPD_INSTALL_COGNOS="true"
+              export CPD_INSTALL_WSL="true"
               export CPD_PRODUCT_VERSION="4.6.6"
 
               export DB2_CPU_REQUESTS=6000m
@@ -308,3 +317,65 @@ spec:
               export DB2_MEMORY_LIMITS=20Gi
 
               ansible-playbook ibm.mas_devops.oneclick_add_manage
+    - name: install-iot
+      when:
+        - input: "$(params.mas-install-iot)"
+          operator: in
+          values: ["true"]
+      retries: 2
+      timeout: "6h"
+      runAfter:
+        - install-mas
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:7.18.0
+            script: |
+              #!/usr/bin/env bash
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+
+              ansible-playbook ibm.mas_devops.oneclick_add_iot
+    - name: install-monitor
+      when:
+        - input: "$(params.mas-install-monitor)"
+          operator: in
+          values: ["true"]
+      retries: 2
+      timeout: "6h"
+      runAfter:
+        - install-iot
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:7.18.0
+            script: |
+              #!/usr/bin/env bash
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+
+              ansible-playbook ibm.mas_devops.oneclick_add_monitor
+
+
+
+
