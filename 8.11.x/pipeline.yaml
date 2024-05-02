@@ -11,6 +11,9 @@ spec:
     - name: mas-instance-id
       type: string
       default: "inst1"
+    - name: mas-workspace-id
+      type: string
+      default: "masupiwork"
     - name: mas-install-cp4d-manage
       type: string
       description: "controls whether Maximo Manage and CP4D+Cognos is installed"
@@ -48,6 +51,14 @@ spec:
     - name: uds-lastname
       description: "Contact last name"
       type: string
+    - name: rwx-storageclass
+      description: "desired RWX storageclass"
+      type: string
+      default: "ocs-storagecluster-cephfs"
+    - name: "rwo-storageclass"
+      description: "desired RWO storageclass"
+      type: string
+      default: "ocs-storagecluster-cephfs"
   finally:
     - name: update-configmap-failure
       when:
@@ -235,23 +246,32 @@ spec:
       params:
         - name: mas-instance-id
           value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
         - name: uds-email
           value: "$(params.uds-email)"
         - name: uds-firstname
           value: "$(params.uds-firstname)"
         - name: uds-lastname
           value: "$(params.uds-lastname)"
+        - name: rwo-storageclass
+          value: "$(params.rwo-storageclass)"
+        - name: rwx-storageclass
+          value: "$(params.rwx-storageclass)"
       taskSpec:
         workspaces:
           - name: ws
         params:
           - name: mas-instance-id
+          - name: mas-workspace-id
           - name: uds-email
           - name: uds-firstname
           - name: uds-lastname
+          - name: rwo-storageclass
+          - name: rwx-storageclass
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:7.18.0
+            image: quay.io/ibmmas/cli:8.2.1
             script: |
               #!/usr/bin/env bash
               # extract license id from license.dat
@@ -261,13 +281,23 @@ spec:
               export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
 
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
-
+              #export MAS_ WORKSPACE_ID=$(params.mas-workspace-id)
               export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
               export MAS_MANUAL_CERT_MGMT=True
 
-              export UDS_CONTACT_EMAIL=$(params.uds-email)
-              export UDS_CONTACT_FIRSTNAME=$(params.uds-firstname)
-              export UDS_CONTACT_LASTNAME=$(params.uds-lastname)
+              export DRO_ACTION=install-dro
+              export BAS_PROVIDER=DRO
+              export DRO_CONTACT_EMAIL=$(params.uds-email)
+              export DRO_CONTACT_FIRSTNAME=$(params.uds-firstname)
+              export DRO_CONTACT_LASTNAME=$(params.uds-lastname)
+
+              export PROMETHEUS_ALERTMGR_STORAGE_CLASS=$(params.rwx-storageclass)
+              export PROMETHEUS_STORAGE_CLASS=$(params.rwo-storageclass)
+              export PROMETHEUS_USERWORKLOAD_STORAGE_CLASS=$(params.rwo-storageclass)
+              export GRAFANA_INSTANCE_STORAGE_CLASS=$(params.rwo-storageclass)
+              export MONGODB_STORAGE_CLASS=$(params.rwo-storageclass)
+              export UDS_STORAGE_CLASS=$(params.rwo-storageclass)
+              export DRO_STORAGE_CLASS=$(params.rwo-storageclass)
 
               ansible-playbook ibm.mas_devops.oneclick_core
     - name: install-cp4d-manage
@@ -284,37 +314,78 @@ spec:
       params:
         - name: mas-instance-id
           value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
         - name: install-demo-data
           value: "$(params.install-demo-data)"
+        - name: rwx-storageclass
+          value: "$(params.rwx-storageclass)"
+        - name: rwo-storageclass
+          value: "$(params.rwo-storageclass)"
       taskSpec:
         workspaces:
           - name: ws
         params:
           - name: mas-instance-id
+          - name: mas-workspace-id
           - name: install-demo-data
+          - name: rwx-storageclass
+          - name: rwo-storageclass
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:7.18.0
+            image: quay.io/ibmmas/cli:8.2.1
             script: |
               #!/usr/bin/env bash
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              #export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
               export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
-              export MAS_CONFIG_SCOPE=system
               export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=wsapp
+              export MAS_APPWS_BINDINGS_JDBC=workspace-application
+
+              export DB2_LDAP_USERNAME=monitor
+              export DB2_LDAP_PASSWORD=passw0rd
+
+              export DB2_INSTANCE_NAME=db2wh-manage
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_DBNAME=BLUDB
+              export DB2_NODE_LABEL=db2wh
+              export DB2_META_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_META_STORAGE_SIZE=100Gi
+              export DB2_META_STORAGE_ACCESSMODE=ReadWriteMany
+              export DB2_DATA_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_DATA_STORAGE_SIZE=100Gi
+              export DB2_DATA_STORAGE_ACCESSMODE=ReadWriteOnce
+              xport DB2_BACKUP_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_BACKUP_STORAGE_SIZE=100Gi
+              export DB2_BACKUP_STORAGE_ACCESSMODE=ReadWriteMany
+              export DB2_TEMP_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_TEMP_STORAGE_SIZE=50Gi
+              export DB2_TEMP_STORAGE_ACCESSMODE=ReadWriteOnce
+              #export DB2_CPU_REQUESTS=6000m
+              #export DB2_CPU_LIMITS=10000m
+              #export DB2_MEMORY_REQUESTS=10Gi
+              #export DB2_MEMORY_LIMITS=20Gi
+
+              export MAS_APP_SETTINGS_PERSISTENT_VOLUMES_FLAG=true
+              export MAS_APP_SETTINGS_BASE_LANG=EN
+              export MAS_APP_SETTINGS_SECONDARY_LANGS='DE'
+              export MAS_APP_SETTINGS_SERVER_BUNDLES_SIZE=jms
+              export MAS_MANAGE_ATTACHMENTS_PROVIDER=filestorage
+              export MAS_APP_SETTINGS_ATTACHMENTS_MOUNT_PATH=/DOCLINKS
+              export MANAGE_AIO_FLAG=false
               export MAS_APP_ID=manage
 
-              export MAS_APPWS_COMPONENTS="base=latest"
+              #export MAS_APPWS_COMPONENTS="base=latest,health=latest"
               export MAS_APP_SETTINGS_DEMODATA=$(params.install-demo-data)
 
               export CPD_INSTALL_PLATFORM="true"
               export CPD_INSTALL_COGNOS="true"
-              export CPD_INSTALL_WSL="true"
-              export CPD_PRODUCT_VERSION="4.6.6"
-
-              export DB2_CPU_REQUESTS=6000m
-              export DB2_CPU_LIMITS=10000m
-              export DB2_MEMORY_REQUESTS=10Gi
-              export DB2_MEMORY_LIMITS=20Gi
+              export CPD_PRODUCT_VERSION="4.8.0"
+              export CPD_PRIMARY_STORAGE_CLASS=$(params.rwx-storageclass)
+              export CPD_METADATA_STORAGE_CLASS=$(params.rwx-storageclass)
+              export CPD_SERVICE_STORAGE_CLASS=$(params.rwx-storageclass)
+              export CPD_SERVICE_BLOCK_STORAGE_CLASS=$(params.rwo-storageclass)
 
               ansible-playbook ibm.mas_devops.oneclick_add_manage
     - name: install-iot
@@ -331,19 +402,31 @@ spec:
       params:
         - name: mas-instance-id
           value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: rwo-storageclass
+          value: "$(params.rwo-storageclass)"
       taskSpec:
         workspaces:
           - name: ws
         params:
           - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: rwo-storageclass
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:7.18.0
+            image: quay.io/ibmmas/cli:8.2.1
             script: |
               #!/usr/bin/env bash
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              #export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
               export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
               export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=system
+              export MAS_APPWS_BINDINGS_JDBC=system
+
+              export MAS_APP_SETTINGS_IOT_FPL_PVC_STORAGE_CLASS=$(params.rwo-storageclass)
 
               ansible-playbook ibm.mas_devops.oneclick_add_iot
     - name: install-monitor
@@ -360,19 +443,26 @@ spec:
       params:
         - name: mas-instance-id
           value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
       taskSpec:
         workspaces:
           - name: ws
         params:
           - name: mas-instance-id
+          - name: mas-workspace-id
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:7.18.0
+            image: quay.io/ibmmas/cli:8.2.1
             script: |
               #!/usr/bin/env bash
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
               export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
               export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=system
+              export MAS_APPWS_BINDINGS_JDBC=system
 
               ansible-playbook ibm.mas_devops.oneclick_add_monitor
 
