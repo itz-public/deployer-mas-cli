@@ -27,6 +27,3 @@ spec:
     tasks: "9h"
   pipelineRef:
     name: mas-masdevops-deploy
-  podTemplate:
-    securityContext:
-      fsGroup: 65532
