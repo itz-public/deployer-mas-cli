@@ -467,12 +467,15 @@ spec:
           value: "$(params.mas-instance-id)"
         - name: mas-workspace-id
           value: "$(params.mas-workspace-id)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
       taskSpec:
         workspaces:
           - name: ws
         params:
           - name: mas-instance-id
           - name: mas-workspace-id
+          - name: mas-channel
         steps:
           - name: run-mas-cli
             image: quay.io/ibmmas/cli:10.0.1
@@ -485,6 +488,7 @@ spec:
               export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
               export MAS_CONFIG_SCOPE=system
               export MAS_APPWS_BINDINGS_JDBC=system
+              export MAS_CHANNEL=$(params.mas-channel)
 
               ansible-playbook ibm.mas_devops.oneclick_add_monitor
 
