@@ -337,6 +337,10 @@ spec:
       workspaces:
         - name: ws
       params:
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
         - name: mas-instance-id
           value: "$(params.mas-instance-id)"
         - name: mas-workspace-id
@@ -353,6 +357,8 @@ spec:
         params:
           - name: mas-instance-id
           - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-channel
           - name: install-demo-data
           - name: rwx-storageclass
           - name: rwo-storageclass
@@ -367,6 +373,8 @@ spec:
               export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
               export MAS_CONFIG_SCOPE=wsapp
               export MAS_APPWS_BINDINGS_JDBC=workspace-application
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
 
               export DB2_INSTANCE_NAME=db2wh-manage
               export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
@@ -422,6 +430,10 @@ spec:
       workspaces:
         - name: ws
       params:
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
         - name: mas-instance-id
           value: "$(params.mas-instance-id)"
         - name: mas-workspace-id
@@ -432,6 +444,8 @@ spec:
         workspaces:
           - name: ws
         params:
+          - name: mas-catalog-version
+          - name: mas-channel
           - name: mas-instance-id
           - name: mas-workspace-id
           - name: rwo-storageclass
@@ -447,6 +461,8 @@ spec:
               export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
               export MAS_CONFIG_SCOPE=system
               export MAS_APPWS_BINDINGS_JDBC=system
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
 
               export MAS_APP_SETTINGS_IOT_FPL_PVC_STORAGE_CLASS=$(params.rwo-storageclass)
 
@@ -467,12 +483,18 @@ spec:
           value: "$(params.mas-instance-id)"
         - name: mas-workspace-id
           value: "$(params.mas-workspace-id)"
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
       taskSpec:
         workspaces:
           - name: ws
         params:
           - name: mas-instance-id
           - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-channel
         steps:
           - name: run-mas-cli
             image: quay.io/ibmmas/cli:10.0.1
@@ -485,6 +507,8 @@ spec:
               export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
               export MAS_CONFIG_SCOPE=system
               export MAS_APPWS_BINDINGS_JDBC=system
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
 
               ansible-playbook ibm.mas_devops.oneclick_add_monitor
 
