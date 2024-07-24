@@ -11,8 +11,6 @@ spec:
       value: "TechZone"
     - name: uds-lastname
       value: "Developer"
-    - name: mas-install-cp4d-manage
-      value: "true"
   workspaces:
     - name: ws
       volumeClaimTemplate:
