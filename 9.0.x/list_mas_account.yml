@@ -2,7 +2,7 @@
 # playbook to list MAS superuser account
 # set the env if the default values are different
 #export MAS_INSTANCE_ID=inst1
-#export PROJECT_CPD_INST_OPERANDS=cpd
+#export PROJECT_CPD_INST_OPERANDS=ibm-cpd
 #ansible-playbook list_mas_account.yml
 
 - hosts: localhost
