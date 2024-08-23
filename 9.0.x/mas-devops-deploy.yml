@@ -756,8 +756,8 @@ spec:
               ./mariadb/mariadb-deploy.sh
 
               # ARTIFACTORY credentials to access dev images. (This section will be optional once the images are publicly available.)
-              export ARTIFACTORY_USERNAME="pmqcloud@us.ibm.com"
-              export ARTIFACTORY_TOKEN="cmVmdGtuOjAxOjE3MzIwNDI4Njg6dmhWamIzRVZYYVRGV2tZaUFGMHU4RHkzY3pW"
+              export ARTIFACTORY_USERNAME="xxx"
+              export ARTIFACTORY_TOKEN="xxx"
               export MAS_ICR_CP="docker-na-public.artifactory.swg-devops.com/wiotp-docker-local"
               export MAS_ICR_CPOPEN="docker-na-public.artifactory.swg-devops.com/wiotp-docker-local/cpopen"
 

@@ -51,11 +51,11 @@ spec:
     - name: mas-install-aibroker
       value: "false"
     - name: watsonxai_apikey
-      value: "Kpmlk3g41arip3HikRWySLzGj_CxOFZ18BiLLXsO-x68"
+      value: "xxx"
     - name: watsonxai_url
       value: "https://us-south.ml.cloud.ibm.com"
     - name: watsonxai_project_id
-      value: "beb9043b-2d70-4eb7-9b07-fe9b6dde606e"
+      value: "xxx"
     - name: mas_aibroker_channel
       value: "9.0.x"
 
