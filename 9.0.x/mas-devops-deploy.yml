@@ -110,6 +110,21 @@ spec:
     - name: cpd-admin-password
       type: string
       default: "xxx"
+    - name: mas-install-aibroker
+      description: "Install AI Broker"
+      type: string
+      default: "false"
+    - name: watsonxai_apikey
+      type: string
+    - name: watsonxai_url
+      type: string
+      default: "https://us-south.ml.cloud.ibm.com"
+    - name: watsonxai_project_id
+      type: string    
+    - name: mas_aibroker_channel
+      type: string 
+      default: "9.0.x"
+
   finally:
     - name: update-configmap-failure
       when:
@@ -278,6 +293,7 @@ spec:
               mkdir -p $(workspaces.ws.path)/masconfig/certs/optimizer/
               mkdir -p $(workspaces.ws.path)/masconfig/certs/visualinspection/
               mkdir -p $(workspaces.ws.path)/masconfig/certs/predict/
+              mkdir -p $(workspaces.ws.path)/masconfig/certs/aibroker/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/iot/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/manage/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/monitor/
@@ -286,6 +302,7 @@ spec:
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/optimizer/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/visualinspection/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/predict/
+              cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/aibroker/
 
               # copy letsencrypt-certs secret to the name where maximo is expecting to find it.
               if oc get secret -n openshift-ingress router-certs-default; then
@@ -660,3 +677,119 @@ spec:
               fi
 
               ansible-playbook ibm.mas_devops.oneclick_add_predict
+
+    - name: install-mas-aibroker
+      when:
+        - input: "$(params.mas-install-aibroker)"
+          operator: in
+          values: ["true"]
+      retries: 2
+      timeout: "8h"
+      runAfter:
+        - install-mas-core
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: uds-email
+          value: "$(params.uds-email)"
+        - name: watsonxai_apikey
+          value: "$(params.watsonxai_apikey)"
+        - name: watsonxai_url
+          value: "$(params.watsonxai_url)"
+        - name: watsonxai_project_id
+          value: "$(params.watsonxai_project_id)"
+        - name: mas_aibroker_channel
+          value: "$(params.mas_aibroker_channel)"
+
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-channel
+          - name: uds-email
+          - name: watsonxai_apikey
+          - name: watsonxai_url
+          - name: watsonxai_project_id
+          - name: mas_aibroker_channel
+
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+
+              mkdir -p $(workspaces.ws.path)/masconfig/minio/
+              mkdir -p $(workspaces.ws.path)/masconfig/mariadb/
+
+              # download files form github repo or other location
+              export MINIO_FOLDER="https://raw.githubusercontent.com/zxue/deploy-maximo-aibroker/main/minio/"
+              export MARIADB_FOLDER="https://raw.githubusercontent.com/zxue/deploy-maximo-aibroker/main/mariadb/"
+
+              wget -qO - "$MINIO_FOLDER"kustomization.yaml > $(workspaces.ws.path)/masconfig/minio/kustomization.yaml
+              wget -qO - "$MINIO_FOLDER"minio.yaml > $(workspaces.ws.path)/masconfig/minio/minio.yaml
+              wget -qO - "$MINIO_FOLDER"pvc.yaml > $(workspaces.ws.path)/masconfig/minio/pvc.yaml
+
+              wget -qO - "$MARIADB_FOLDER"mariadb-deploy.sh > $(workspaces.ws.path)/masconfig/mariadb/mariadb-deploy.sh
+              wget -qO - "$MARIADB_FOLDER"mariadb-deployment.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-deployment.yml
+              wget -qO - "$MARIADB_FOLDER"mariadb-np.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-np.yml
+              wget -qO - "$MARIADB_FOLDER"mariadb-ns.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-ns.yml
+              wget -qO - "$MARIADB_FOLDER"mariadb-pvc.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-pvc.yml
+              wget -qO - "$MARIADB_FOLDER"mariadb-sa.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-sa.yml
+              wget -qO - "$MARIADB_FOLDER"mariadb-secret.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-secret.yml
+              wget -qO - "$MARIADB_FOLDER"mariadb-service.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-service.yml
+
+              # run oc command lines to create minio storage and mariadb
+              cd  $(workspaces.ws.path)/masconfig
+              chmod 777 $(workspaces.ws.path)/masconfig/mariadb/mariadb-deploy.sh
+              oc apply -k minio
+              ./mariadb/mariadb-deploy.sh
+
+              # ARTIFACTORY credentials to access dev images. (This section will be optional once the images are publicly available.)
+              export ARTIFACTORY_USERNAME="pmqcloud@us.ibm.com"
+              export ARTIFACTORY_TOKEN="cmVmdGtuOjAxOjE3MzIwNDI4Njg6dmhWamIzRVZYYVRGV2tZaUFGMHU4RHkzY3pW"
+              export MAS_ICR_CP="docker-na-public.artifactory.swg-devops.com/wiotp-docker-local"
+              export MAS_ICR_CPOPEN="docker-na-public.artifactory.swg-devops.com/wiotp-docker-local/cpopen"
+
+              #MAS
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_ENTITLEMENT_USERNAME=$(params.uds-email)
+              export MAS_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+
+              # MINIO
+              export STORAGE_ACCESSKEY="minio123"
+              export STORAGE_SECRETKEY="minio123"
+              export STORAGE_SSL="false"
+              export STORAGE_PROVIDER="minio"
+              #export STORAGE_REGION="storage provider region"  
+              export STORAGE_PORT="9000"
+              export STORAGE_HOST="minio-service.minio.svc.cluster.local"
+              export STORAGE_PIPELINES_BUCKET="km-pipelines"
+              export STORAGE_TENANTS_BUCKET="km-tenants"
+              export STORAGE_TEMPLATES_BUCKET="km-templates"
+
+              # WATSONX AI
+              export WATSONXAI_APIKEY=$(params.watsonxai_apikey)
+              export WATSONXAI_URL=$(params.watsonxai_url)
+              export WATSONXAI_PROJECT_ID=$(params.watsonxai_project_id)
+              export MAS_AIBROKER_CHANNEL=$(params.mas_aibroker_channel)
+
+              # database
+              export DB_HOST="mariadb-instance.mariadb.svc.cluster.local"
+              export DB_PORT="3306"
+              export DB_USER="mariadb"
+              export DB_DATABASE="kmpipeline"
+              export DB_SECRET_NAME="ds-pipeline-db-instance"
+              export DB_SECRET_VALUE="mariadb"
+
+              ansible-playbook ibm.mas_devops.oneclick_add_aibroker

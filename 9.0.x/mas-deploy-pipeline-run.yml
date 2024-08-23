@@ -19,15 +19,15 @@ spec:
 
     # install MAS Manage, depending on MAS Core
     - name: mas-install-cp4d-manage
-      value: "true"
+      value: "false"
     - name: mas-cp4d-install-cognos
       value: "false"
 
     # install MAS IoT and Monitor, depending on MAS Core
     - name: mas-install-iot
-      value: "true"
+      value: "false"
     - name: mas-install-monitor
-      value: "true"
+      value: "false"
 
     # install MAS Predict, depending on MAS Core, Manage, IoT and Monitor
     - name: mas-install-predict
@@ -46,6 +46,19 @@ spec:
       value: "admin"
     - name: cpd-admin-password
       value: "xxx"
+
+    # install MAS Predict, depending on MAS Core, Manage, IoT and Monitor
+    - name: mas-install-aibroker
+      value: "false"
+    - name: watsonxai_apikey
+      value: "Kpmlk3g41arip3HikRWySLzGj_CxOFZ18BiLLXsO-x68"
+    - name: watsonxai_url
+      value: "https://us-south.ml.cloud.ibm.com"
+    - name: watsonxai_project_id
+      value: "beb9043b-2d70-4eb7-9b07-fe9b6dde606e"
+    - name: mas_aibroker_channel
+      value: "9.0.x"
+
   workspaces:
     - name: ws
       volumeClaimTemplate:
