@@ -114,6 +114,10 @@ spec:
       description: "Install AI Broker"
       type: string
       default: "false"
+    - name: artifactory_username
+      type: string
+    - name: artifactory_token
+      type: string
     - name: watsonxai_apikey
       type: string
     - name: watsonxai_url
@@ -137,7 +141,7 @@ spec:
       params:
         - name: SCRIPT
           value: |
-            oc patch configmap/pipeline-output -p '{"data":{"Status":"Pipeline run failed. See Pipeline run for more details and consider running the pipeline again."}}'
+            oc patch configmap/pipeline-output -p '{"data":{"Status":"Pipeline run failed/skipped to install mas core. See Pipeline run for more details and consider running the pipeline again."}}'
     - name: update-configmap-success
       when:
         - input: $(tasks.install-mas-core.status)
@@ -150,69 +154,57 @@ spec:
         - name: SCRIPT
           value: |
             # get and echo the pipeline the mas installer created
-            oc patch configmap/pipeline-output -p '{"data":{"Status":"Deployment Pipeline Running."}}'
+            oc patch configmap/pipeline-output -p '{"data":{"Status":"Deployment Pipeline completed to install mas core."}}'
   tasks:
     - name: get-ibm-entitlement-key
+      when:
+        - input: "$(params.ibm-entitlement-key)"
+          operator: in
+          values: ["false"]
       taskRef:
         name: ibmcloud-secrets-manager-get
         kind: Task
+      retries: 2
       params:
         - name: KEY_ID
           value: 968d7819-f2c5-7b67-c420-3c6bfd51521e
         - name: SECRETS_MANAGER_ENDPOINT_URL
           value: >-
             https://afa20521-cd75-4864-843f-e59fd0ffd49d.us-south.secrets-manager.appdomain.cloud
-    - name: set-retrieved-entitlement-key
-      when:
-        - input: "$(params.ibm-entitlement-key)"
-          operator: in
-          values: ["false"]
+    - name: set-ibm-entitlement-key
       runAfter:
         - get-ibm-entitlement-key
       params:
-        - name: retrieved-entitlement-key
-          value: $(tasks.get-ibm-entitlement-key.results.secret-value)
-      workspaces:
-        - name: ws
-      taskSpec:
-        workspaces:
-          - name: ws
-        params:
-          - name: retrieved-entitlement-key
-        steps:
-          - name: set-entitlement-key
-            image: quay.io/openshift/origin-cli:4.10
-            script: |
-              #!/usr/bin/env bash
-              echo $(params.retrieved-entitlement-key)
-              echo $(params.retrieved-entitlement-key) > $(workspaces.ws.path)/ek.dat
-              echo "ek.dat created"
-              exit
-    - name: set-provided-entitlement-key
-      workspaces:
-        - name: ws
-      params:
-        - name: provided-entitlement-key
+        - name: ibm-entitlement-key
           value: "$(params.ibm-entitlement-key)"
+      retries: 2
       taskSpec:
         workspaces:
           - name: ws
         params:
-          - name: provided-entitlement-key
+          - name: ibm-entitlement-key
         steps:
-          - name: set-entitlement
+          - name: copy-entitlement-key-to-ws
             image: quay.io/openshift/origin-cli:4.10
             script: |
               #!/usr/bin/env bash
-              echo $(params.provided-entitlement-key) > $(workspaces.ws.path)/ek.dat
+              if [ $(params.ibm-entitlement-key) == "false" ]; then
+                echo "Use TechZone provided entitlement key"
+                echo $(tasks.get-ibm-entitlement-key.results.secret-value)
+                echo $(tasks.get-ibm-entitlement-key.results.secret-value) > $(workspaces.ws.path)/ek.dat
+                
+              else
+                echo "Use user provided entitlement key"
+                echo $(params.ibm-entitlement-key)
+                echo $(params.ibm-entitlement-key) > $(workspaces.ws.path)/ek.dat
+              fi
+
               echo "ek.dat created"
               exit
     - name: get-maximo-licensefile
+      retries: 2
       workspaces:
         - name: ws
-      runAfter:
-        - set-provided-entitlement-key
-        - set-retrieved-entitlement-key
       params:
         - name: KEY_ID
           value: 5ef410aa-bd48-3339-0096-d2b11e91cb57
@@ -252,14 +244,16 @@ spec:
               fi
 
               cat $(workspaces.ws.path)/license.dat
+              exit
     - name: get-tls-certs
       when:
         - input: "$(params.use-letsencrypt-certs)"
           operator: in
           values: ["true"]
       retries: 2
-      runAfter:
-        - get-maximo-licensefile
+      # runAfter:
+      #   - set-ibm-entitlement-key
+      #   - get-maximo-licensefile
       params:
         - name: TLSCERT_SECRET_LOCATION
           value: "$(params.tlscert-secret)"
@@ -310,6 +304,7 @@ spec:
               else
                 oc get secret letsencrypt-certs -n openshift-ingress -o yaml | yq '.metadata["name"]="router-certs-default"' | oc apply -n openshift-ingress -f -
               fi
+              exit
     - name: install-mas-core
       when:
         - input: "$(params.mas-install-core)"
@@ -318,8 +313,9 @@ spec:
       retries: 2
       timeout: "6h"
       runAfter:
-        - get-tls-certs
+        - set-ibm-entitlement-key
         - get-maximo-licensefile
+        - get-tls-certs
       workspaces:
         - name: ws
       params:
@@ -700,6 +696,10 @@ spec:
           value: "$(params.mas-channel)"
         - name: uds-email
           value: "$(params.uds-email)"
+        - name: artifactory_username
+          value: "$(params.artifactory_username)"
+        - name: artifactory_token
+          value: "$(params.artifactory_token)"
         - name: watsonxai_apikey
           value: "$(params.watsonxai_apikey)"
         - name: watsonxai_url
@@ -718,6 +718,8 @@ spec:
           - name: mas-catalog-version
           - name: mas-channel
           - name: uds-email
+          - name: artifactory_username
+          - name: artifactory_token
           - name: watsonxai_apikey
           - name: watsonxai_url
           - name: watsonxai_project_id
@@ -756,8 +758,8 @@ spec:
               ./mariadb/mariadb-deploy.sh
 
               # ARTIFACTORY credentials to access dev images. (This section will be optional once the images are publicly available.)
-              export ARTIFACTORY_USERNAME="xxx"
-              export ARTIFACTORY_TOKEN="xxx"
+              export ARTIFACTORY_USERNAME=$(params.artifactory_username)
+              export ARTIFACTORY_TOKEN=$(params.artifactory_token)
               export MAS_ICR_CP="docker-na-public.artifactory.swg-devops.com/wiotp-docker-local"
               export MAS_ICR_CPOPEN="docker-na-public.artifactory.swg-devops.com/wiotp-docker-local/cpopen"
 

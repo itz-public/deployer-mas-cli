@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  generateName: pr-mas-deploy-
+  generateName: pr-mas-deploy-test-
   namespace: default
 spec:
   params:
@@ -19,19 +19,19 @@ spec:
 
     # install MAS Manage, depending on MAS Core
     - name: mas-install-cp4d-manage
-      value: "false"
+      value: "true"
     - name: mas-cp4d-install-cognos
       value: "false"
 
     # install MAS IoT and Monitor, depending on MAS Core
     - name: mas-install-iot
-      value: "false"
+      value: "true"
     - name: mas-install-monitor
-      value: "false"
+      value: "true"
 
     # install MAS Predict, depending on MAS Core, Manage, IoT and Monitor
     - name: mas-install-predict
-      value: "false"
+      value: "true"
     - name: cpd-platform-components
       value: "true"
     - name: cpd-install-spss
@@ -49,11 +49,15 @@ spec:
 
     # install MAS Predict, depending on MAS Core, Manage, IoT and Monitor
     - name: mas-install-aibroker
-      value: "false"
+      value: "true"
+    - name: artifactory_username
+      value: "xxx"
+    - name: artifactory_token
+      value: "xxx"
     - name: watsonxai_apikey
       value: "xxx"
     - name: watsonxai_url
-      value: "https://us-south.ml.cloud.ibm.com"
+      value: "xxx"
     - name: watsonxai_project_id
       value: "xxx"
     - name: mas_aibroker_channel
