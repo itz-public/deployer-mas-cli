@@ -21,7 +21,7 @@ spec:
 
     # install MAS Manage, depending on MAS Core, optionally CP4D/DB2
     - name: mas-install-manage
-      value: "true"
+      value: "false"
     - name: mas-install-demo-data
       value: "true"
     - name: mas-cp4d-install-cognos
@@ -29,11 +29,11 @@ spec:
 
     # install MAS IoT and Monitor, depending on MAS Core
     - name: mas-install-iot
-      value: "true"
+      value: "false"
     - name: mas-install-monitor
-      value: "true"
+      value: "false"
 
-    # install MAS Predict, depending on MAS Core, IoT and Monitor, optionally CP4D services
+    # install MAS Predict, depending on MAS Core, Health, IoT and Monitor, optionally CP4D services
     - name: mas-install-predict
       value: "false"
     - name: cpd-platform-components
@@ -53,7 +53,7 @@ spec:
 
     # install MAS AI Broker, depending on MAS Core
     - name: mas-install-aibroker
-      value: "false"
+      value: "true"
     - name: artifactory_username
       value: "xxxx"
     - name: artifactory_token
