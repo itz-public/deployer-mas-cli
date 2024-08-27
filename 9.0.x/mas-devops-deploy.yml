@@ -22,7 +22,7 @@ spec:
       type: string
       description: "Supported CP4D version for MAS on OpenShift"
       default: "4.8.0"
-    - name: mas-install-cp4d-manage
+    - name: mas-install-manage
       type: string
       description: "controls whether Maximo Manage and CP4D is installed"
       default: "true"
@@ -81,7 +81,7 @@ spec:
     - name: "mas-catalog-version"
       description: "Maximo operator catalog version"
       type: string
-      default: "v9-240625-amd64"
+      default: "v9-240730-amd64"
     - name: mas-channel
       description: "channel to subscribe to"
       type: string
@@ -177,7 +177,7 @@ spec:
       params:
         - name: ibm-entitlement-key
           value: "$(params.ibm-entitlement-key)"
-      retries: 2
+      retries: 3
       taskSpec:
         workspaces:
           - name: ws
@@ -246,14 +246,14 @@ spec:
               cat $(workspaces.ws.path)/license.dat
               exit
     - name: get-tls-certs
+      runAfter:
+        - set-ibm-entitlement-key
+        - get-maximo-licensefile
       when:
         - input: "$(params.use-letsencrypt-certs)"
           operator: in
           values: ["true"]
-      retries: 2
-      # runAfter:
-      #   - set-ibm-entitlement-key
-      #   - get-maximo-licensefile
+      retries: 3
       params:
         - name: TLSCERT_SECRET_LOCATION
           value: "$(params.tlscert-secret)"
@@ -287,7 +287,7 @@ spec:
               mkdir -p $(workspaces.ws.path)/masconfig/certs/optimizer/
               mkdir -p $(workspaces.ws.path)/masconfig/certs/visualinspection/
               mkdir -p $(workspaces.ws.path)/masconfig/certs/predict/
-              mkdir -p $(workspaces.ws.path)/masconfig/certs/aibroker/
+              #mkdir -p $(workspaces.ws.path)/masconfig/certs/aibroker/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/iot/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/manage/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/monitor/
@@ -296,7 +296,7 @@ spec:
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/optimizer/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/visualinspection/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/predict/
-              cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/aibroker/
+              #cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/aibroker/
 
               # copy letsencrypt-certs secret to the name where maximo is expecting to find it.
               if oc get secret -n openshift-ingress router-certs-default; then
@@ -310,11 +310,9 @@ spec:
         - input: "$(params.mas-install-core)"
           operator: in
           values: ["true"]
-      retries: 2
+      retries: 3
       timeout: "6h"
       runAfter:
-        - set-ibm-entitlement-key
-        - get-maximo-licensefile
         - get-tls-certs
       workspaces:
         - name: ws
@@ -386,15 +384,519 @@ spec:
               export DRO_STORAGE_CLASS=$(params.rwo-storageclass)
 
               ansible-playbook ibm.mas_devops.oneclick_core
-    - name: install-cp4d-manage
+
+    - name: install-cp4d-platform
       when:
-        - input: "$(params.mas-install-cp4d-manage)"
+        - input: "$(params.mas-install-manage)"
+          operator: in
+          values: ["true"]
+      retries: 3
+      timeout: "6h"
+      runAfter:
+        - get-tls-certs
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-cp4d-version
+          value: "$(params.mas-cp4d-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: mas-cp4d-install-cognos
+          value: "$(params.mas-cp4d-install-cognos)"        
+        - name: rwx-storageclass
+          value: "$(params.rwx-storageclass)"
+        - name: rwo-storageclass
+          value: "$(params.rwo-storageclass)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-cp4d-version
+          - name: mas-channel
+          - name: mas-cp4d-install-cognos
+          - name: rwx-storageclass
+          - name: rwo-storageclass
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=wsapp
+              export MAS_APPWS_BINDINGS_JDBC=workspace-application
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
+
+              export DB2_INSTANCE_NAME=db2wh-manage
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_DBNAME=BLUDB
+              export DB2_NODE_LABEL=db2wh
+              export DB2_META_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_META_STORAGE_SIZE=100Gi
+              export DB2_META_STORAGE_ACCESSMODE=ReadWriteMany
+              export DB2_DATA_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_DATA_STORAGE_SIZE=100Gi
+              export DB2_DATA_STORAGE_ACCESSMODE=ReadWriteOnce
+              export DB2_BACKUP_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_BACKUP_STORAGE_SIZE=100Gi
+              export DB2_BACKUP_STORAGE_ACCESSMODE=ReadWriteMany
+              export DB2_TEMP_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_TEMP_STORAGE_SIZE=50Gi
+              export DB2_TEMP_STORAGE_ACCESSMODE=ReadWriteOnce
+              #export DB2_CPU_REQUESTS=6000m
+              #export DB2_CPU_LIMITS=10000m
+              #export DB2_MEMORY_REQUESTS=10Gi
+              #export DB2_MEMORY_LIMITS=20Gi
+
+              export CPD_INSTALL_PLATFORM="true"
+              export CPD_INSTALL_COGNOS=$(params.mas-cp4d-install-cognos)
+              export CPD_PRODUCT_VERSION=$(params.mas-cp4d-version) 
+              export CPD_PRIMARY_STORAGE_CLASS=$(params.rwx-storageclass)
+              export CPD_METADATA_STORAGE_CLASS=$(params.rwx-storageclass)
+              export CPD_SERVICE_STORAGE_CLASS=$(params.rwx-storageclass)
+              export CPD_SERVICE_BLOCK_STORAGE_CLASS=$(params.rwo-storageclass)
+
+              # Cloud Pak for Data Platform (~1 1/2 hours)
+              ROLE_NAME=cp4d ansible-playbook ibm.mas_devops.run_role
+    - name: install-cp4d-db2
+      when:
+        - input: "$(params.mas-install-manage)"
+          operator: in
+          values: ["true"]
+      retries: 2
+      timeout: "6h"
+      runAfter:
+        - install-cp4d-platform
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-cp4d-version
+          value: "$(params.mas-cp4d-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: mas-cp4d-install-cognos
+          value: "$(params.mas-cp4d-install-cognos)"        
+        - name: rwx-storageclass
+          value: "$(params.rwx-storageclass)"
+        - name: rwo-storageclass
+          value: "$(params.rwo-storageclass)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-cp4d-version
+          - name: mas-channel
+          - name: mas-cp4d-install-cognos
+          - name: rwx-storageclass
+          - name: rwo-storageclass
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=wsapp
+              export MAS_APPWS_BINDINGS_JDBC=workspace-application
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
+
+              export DB2_INSTANCE_NAME=db2wh-manage
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_DBNAME=BLUDB
+              export DB2_NODE_LABEL=db2wh
+              export DB2_META_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_META_STORAGE_SIZE=100Gi
+              export DB2_META_STORAGE_ACCESSMODE=ReadWriteMany
+              export DB2_DATA_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_DATA_STORAGE_SIZE=100Gi
+              export DB2_DATA_STORAGE_ACCESSMODE=ReadWriteOnce
+              export DB2_BACKUP_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_BACKUP_STORAGE_SIZE=100Gi
+              export DB2_BACKUP_STORAGE_ACCESSMODE=ReadWriteMany
+              export DB2_TEMP_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_TEMP_STORAGE_SIZE=50Gi
+              export DB2_TEMP_STORAGE_ACCESSMODE=ReadWriteOnce
+              #export DB2_CPU_REQUESTS=6000m
+              #export DB2_CPU_LIMITS=10000m
+              #export DB2_MEMORY_REQUESTS=10Gi
+              #export DB2_MEMORY_LIMITS=20Gi
+
+              export CPD_INSTALL_PLATFORM="true"
+              export CPD_INSTALL_COGNOS=$(params.mas-cp4d-install-cognos)
+              export CPD_PRODUCT_VERSION=$(params.mas-cp4d-version) 
+              export CPD_PRIMARY_STORAGE_CLASS=$(params.rwx-storageclass)
+              export CPD_METADATA_STORAGE_CLASS=$(params.rwx-storageclass)
+              export CPD_SERVICE_STORAGE_CLASS=$(params.rwx-storageclass)
+              export CPD_SERVICE_BLOCK_STORAGE_CLASS=$(params.rwo-storageclass)
+
+              ROLE_NAME=db2 ansible-playbook ibm.mas_devops.run_role
+              ROLE_NAME=suite_db2_setup_for_manage ansible-playbook ibm.mas_devops.run_role             
+    - name: install-cp4d-services-wsl
+      when:
+        - input: "$(params.mas-install-predict)"
+          operator: in
+          values: ["true"]
+      retries: 2
+      timeout: "6h"
+      runAfter:
+        - install-cp4d-platform
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: mas-cp4d-version
+          value: "$(params.mas-cp4d-version)"
+        - name: cpd-platform-services
+          value: "$(params.cpd-platform-services)"
+        - name: cpd-install-spss
+          value: "$(params.cpd-install-spss)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-channel
+          - name: mas-cp4d-version
+          - name: cpd-platform-services
+          - name: cpd-install-spss
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=system
+              export MAS_APPWS_BINDINGS_JDBC=system
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
+
+              export CPD_PRODUCT_VERSION=$(params.mas-cp4d-version)
+              export CPD_INSTALL_PLATFORM=$(params.cpd-platform-services)
+              export CPD_INSTALL_WSL=$(params.cpd-platform-services)
+              export CPD_INSTALL_WML=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPARK=$(params.cpd-platform-services)
+              export CPD_INSTALL_OPENSCALE=$(params.cpd-platform-services)
+              export CPD_INSTALL_DISCOVERY=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPSS=$(params.cpd-install-spss)
+
+              export CPD_SERVICE_NAME=wsl
+              ROLE_NAME=cp4d_service ansible-playbook ibm.mas_devops.run_role
+    - name: install-cp4d-services-wml
+      when:
+        - input: "$(params.mas-install-predict)"
+          operator: in
+          values: ["true"]
+      retries: 2
+      timeout: "6h"
+      runAfter:
+        - install-cp4d-platform
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: mas-cp4d-version
+          value: "$(params.mas-cp4d-version)"
+        - name: cpd-platform-services
+          value: "$(params.cpd-platform-services)"
+        - name: cpd-install-spss
+          value: "$(params.cpd-install-spss)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-channel
+          - name: mas-cp4d-version
+          - name: cpd-platform-services
+          - name: cpd-install-spss
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=system
+              export MAS_APPWS_BINDINGS_JDBC=system
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
+
+              export CPD_PRODUCT_VERSION=$(params.mas-cp4d-version)
+              export CPD_INSTALL_PLATFORM=$(params.cpd-platform-services)
+              export CPD_INSTALL_WSL=$(params.cpd-platform-services)
+              export CPD_INSTALL_WML=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPARK=$(params.cpd-platform-services)
+              export CPD_INSTALL_OPENSCALE=$(params.cpd-platform-services)
+              export CPD_INSTALL_DISCOVERY=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPSS=$(params.cpd-install-spss)
+
+              # Watson Machine Learning (~2 1/2 hours)
+              export CPD_SERVICE_NAME=wml
+              ROLE_NAME=cp4d_service ansible-playbook ibm.mas_devops.run_role
+    - name: install-cp4d-services-spark
+      when:
+        - input: "$(params.mas-install-predict)"
+          operator: in
+          values: ["true"]
+      retries: 2
+      timeout: "6h"
+      runAfter:
+        - install-cp4d-platform
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: mas-cp4d-version
+          value: "$(params.mas-cp4d-version)"
+        - name: cpd-wsl-projectname
+          value: "$(params.cpd-wsl-projectname)"
+        - name: cpd-platform-services
+          value: "$(params.cpd-platform-services)"
+        - name: cpd-install-spss
+          value: "$(params.cpd-install-spss)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-channel
+          - name: mas-cp4d-version
+          - name: cpd-platform-services
+          - name: cpd-install-spss
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=system
+              export MAS_APPWS_BINDINGS_JDBC=system
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
+
+              export CPD_PRODUCT_VERSION=$(params.mas-cp4d-version)
+              export CPD_INSTALL_PLATFORM=$(params.cpd-platform-services)
+              export CPD_INSTALL_WSL=$(params.cpd-platform-services)
+              export CPD_INSTALL_WML=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPARK=$(params.cpd-platform-services)
+              export CPD_INSTALL_OPENSCALE=$(params.cpd-platform-services)
+              export CPD_INSTALL_DISCOVERY=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPSS=$(params.cpd-install-spss)
+
+              # Analytics Engine Powered by Apache Spark (~30 minutes)
+              export CPD_SERVICE_NAME=spark
+              ROLE_NAME=cp4d_service ansible-playbook ibm.mas_devops.run_role
+    - name: install-cp4d-services-aiopenscale
+      when:
+        - input: "$(params.mas-install-predict)"
+          operator: in
+          values: ["true"]
+      retries: 2
+      timeout: "6h"
+      runAfter:
+        - install-cp4d-platform
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: mas-cp4d-version
+          value: "$(params.mas-cp4d-version)"
+        - name: cpd-platform-services
+          value: "$(params.cpd-platform-services)"
+        - name: cpd-install-spss
+          value: "$(params.cpd-install-spss)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-channel
+          - name: mas-cp4d-version
+          - name: cpd-platform-services
+          - name: cpd-install-spss
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=system
+              export MAS_APPWS_BINDINGS_JDBC=system
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
+
+              export CPD_PRODUCT_VERSION=$(params.mas-cp4d-version)
+              export CPD_INSTALL_PLATFORM=$(params.cpd-platform-services)
+              export CPD_INSTALL_WSL=$(params.cpd-platform-services)
+              export CPD_INSTALL_WML=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPARK=$(params.cpd-platform-services)
+              export CPD_INSTALL_OPENSCALE=$(params.cpd-platform-services)
+              export CPD_INSTALL_DISCOVERY=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPSS=$(params.cpd-install-spss)
+
+              # Watson OpenScale (~1 hour)
+              export CPD_SERVICE_NAME=aiopenscale
+              ROLE_NAME=cp4d_service ansible-playbook ibm.mas_devops.run_role
+    - name: install-cp4d-services-spss
+      when:
+        - input: "$(params.mas-install-predict)"
+          operator: in
+          values: ["true"]
+        - input: "$($(params.cpd-install-spss)"
+          operator: in
+          values: ["true"]
+      retries: 2
+      timeout: "6h"
+      runAfter:
+        - install-cp4d-platform
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: mas-cp4d-version
+          value: "$(params.mas-cp4d-version)"
+        - name: cpd-platform-services
+          value: "$(params.cpd-platform-services)"
+        - name: cpd-install-spss
+          value: "$(params.cpd-install-spss)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-channel
+          - name: mas-cp4d-version
+          - name: cpd-platform-services
+          - name: cpd-install-spss
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=system
+              export MAS_APPWS_BINDINGS_JDBC=system
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
+
+              export CPD_PRODUCT_VERSION=$(params.mas-cp4d-version)
+              export CPD_INSTALL_PLATFORM=$(params.cpd-platform-services)
+              export CPD_INSTALL_WSL=$(params.cpd-platform-services)
+              export CPD_INSTALL_WML=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPARK=$(params.cpd-platform-services)
+              export CPD_INSTALL_OPENSCALE=$(params.cpd-platform-services)
+              export CPD_INSTALL_DISCOVERY=$(params.cpd-platform-services)
+              export CPD_INSTALL_SPSS=$(params.cpd-install-spss)
+
+              # SPSS MODELER
+              export CPD_SERVICE_NAME=spss
+              ROLE_NAME=cp4d_service ansible-playbook ibm.mas_devops.run_role
+
+    - name: install-manage
+      when:
+        - input: "$(params.mas-install-manage)"
           operator: in
           values: ["true"]
       retries: 2
       timeout: "10h"
       runAfter:
         - install-mas-core
+        - install-cp4d-db2
       workspaces:
         - name: ws
       params:
@@ -587,8 +1089,12 @@ spec:
       retries: 2
       timeout: "6h"
       runAfter:
-        - install-cp4d-manage
         - install-monitor
+        - install-cp4d-services-wsl
+        - install-cp4d-services-wml
+        - install-cp4d-services-spark
+        - install-cp4d-services-aiopenscale
+        - install-cp4d-services-spss
       workspaces:
         - name: ws
       params:
@@ -673,13 +1179,12 @@ spec:
               fi
 
               ansible-playbook ibm.mas_devops.oneclick_add_predict
-
     - name: install-mas-aibroker
       when:
         - input: "$(params.mas-install-aibroker)"
           operator: in
           values: ["true"]
-      retries: 2
+      retries: 3
       timeout: "8h"
       runAfter:
         - install-mas-core

@@ -2,9 +2,11 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  generateName: pr-mas-deploy-test-
+  generateName: pr-mas-deploy-
   namespace: default
 spec:
+  pipelineRef:
+      name: mas-devops-deploy
   params:
     - name: uds-email
       value: "dev-techzone@ibm.com"
@@ -17,8 +19,10 @@ spec:
     - name: mas-install-core
       value: "true"
 
-    # install MAS Manage, depending on MAS Core
-    - name: mas-install-cp4d-manage
+    # install MAS Manage, depending on MAS Core, optionally CP4D/DB2
+    - name: mas-install-manage
+      value: "true"
+    - name: mas-install-demo-data
       value: "true"
     - name: mas-cp4d-install-cognos
       value: "false"
@@ -29,9 +33,9 @@ spec:
     - name: mas-install-monitor
       value: "true"
 
-    # install MAS Predict, depending on MAS Core, Manage, IoT and Monitor
+    # install MAS Predict, depending on MAS Core, IoT and Monitor, optionally CP4D services
     - name: mas-install-predict
-      value: "true"
+      value: "false"
     - name: cpd-platform-components
       value: "true"
     - name: cpd-install-spss
@@ -47,17 +51,17 @@ spec:
     - name: cpd-admin-password
       value: "xxx"
 
-    # install MAS Predict, depending on MAS Core, Manage, IoT and Monitor
+    # install MAS AI Broker, depending on MAS Core
     - name: mas-install-aibroker
-      value: "true"
+      value: "false"
     - name: artifactory_username
-      value: "xxx"
+      value: "xxxx"
     - name: artifactory_token
       value: "xxx"
     - name: watsonxai_apikey
       value: "xxx"
     - name: watsonxai_url
-      value: "xxx"
+      value: "https://us-south.ml.cloud.ibm.com"
     - name: watsonxai_project_id
       value: "xxx"
     - name: mas_aibroker_channel
@@ -75,5 +79,3 @@ spec:
   timeouts:
     pipeline: "0"
     tasks: "24h"
-  pipelineRef:
-    name: mas-devops-deploy
