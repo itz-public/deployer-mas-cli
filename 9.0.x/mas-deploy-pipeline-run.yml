@@ -53,7 +53,7 @@ spec:
 
     # install MAS AI Broker, depending on MAS Core
     - name: mas-install-aibroker
-      value: "true"
+      value: "false"
     - name: artifactory_username
       value: "xxxx"
     - name: artifactory_token

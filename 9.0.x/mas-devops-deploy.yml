@@ -79,9 +79,9 @@ spec:
       type: string
       default: letsencrypt-certs
     - name: "mas-catalog-version"
-      description: "Maximo operator catalog version, e.g. v9-240730-amd64"
+      description: "Maximo operator catalog version, e.g. v9-240625-amd64"
       type: string
-      default: "v9-240625-amd64"
+      default: "v9-240730-amd64"
     - name: mas-channel
       description: "channel to subscribe to"
       type: string
