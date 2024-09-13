@@ -21,7 +21,7 @@ spec:
 
     # install MAS Manage, depending on MAS Core, optionally CP4D/DB2
     - name: mas-install-manage
-      value: "false"
+      value: "true"
     - name: mas-install-demo-data
       value: "true"
     - name: mas-cp4d-install-cognos
@@ -29,9 +29,9 @@ spec:
 
     # install MAS IoT and Monitor, depending on MAS Core
     - name: mas-install-iot
-      value: "false"
+      value: "true"
     - name: mas-install-monitor
-      value: "false"
+      value: "true"
 
     # install MAS Predict, depending on MAS Core, Health, IoT and Monitor, optionally CP4D services
     - name: mas-install-predict
@@ -51,18 +51,18 @@ spec:
     - name: cpd-admin-password
       value: "xxx"
 
-    # install MAS AI Broker, depending on MAS Core
+    # install MAS AI Broker, depending on MAS Core, Manage, IoT and Monitor
     - name: mas-install-aibroker
       value: "false"
     - name: artifactory_username
-      value: "xxxx"
+      value: "xxx"
     - name: artifactory_token
       value: "xxx"
-    - name: watsonxai_apikey
+    - name: mas_airbroker_watsonxai_apikey
       value: "xxx"
-    - name: watsonxai_url
+    - name: mas_airbroker_watsonxai_url
       value: "https://us-south.ml.cloud.ibm.com"
-    - name: watsonxai_project_id
+    - name: mas_airbroker_watsonxai_project_id
       value: "xxx"
     - name: mas_aibroker_channel
       value: "9.0.x"

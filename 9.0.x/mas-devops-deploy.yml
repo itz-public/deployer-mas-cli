@@ -79,9 +79,9 @@ spec:
       type: string
       default: letsencrypt-certs
     - name: "mas-catalog-version"
-      description: "Maximo operator catalog version, e.g. v9-240625-amd64"
+      description: "Maximo operator catalog version, e.g. v9-240730-amd64"
       type: string
-      default: "v9-240730-amd64"
+      default: "v9-240827-amd64"
     - name: mas-channel
       description: "channel to subscribe to"
       type: string
@@ -118,12 +118,12 @@ spec:
       type: string
     - name: artifactory_token
       type: string
-    - name: watsonxai_apikey
+    - name: mas_airbroker_watsonxai_apikey
       type: string
-    - name: watsonxai_url
+    - name: mas_airbroker_watsonxai_url
       type: string
       default: "https://us-south.ml.cloud.ibm.com"
-    - name: watsonxai_project_id
+    - name: mas_airbroker_watsonxai_project_id
       type: string    
     - name: mas_aibroker_channel
       type: string 
@@ -191,15 +191,13 @@ spec:
               if [ $(params.ibm-entitlement-key) == "false" ]; then
                 echo "Use TechZone provided entitlement key"
                 echo $(tasks.get-ibm-entitlement-key.results.secret-value)
-                echo $(tasks.get-ibm-entitlement-key.results.secret-value) > $(workspaces.ws.path)/ek.dat
-                
+                echo $(tasks.get-ibm-entitlement-key.results.secret-value) > $(workspaces.ws.path)/ek.dat              
               else
                 echo "Use user provided entitlement key"
                 echo $(params.ibm-entitlement-key)
                 echo $(params.ibm-entitlement-key) > $(workspaces.ws.path)/ek.dat
               fi
-
-              echo "ek.dat created"
+              echo "ek.dat created" 
               exit
     - name: get-maximo-licensefile
       retries: 2
@@ -287,7 +285,7 @@ spec:
               mkdir -p $(workspaces.ws.path)/masconfig/certs/optimizer/
               mkdir -p $(workspaces.ws.path)/masconfig/certs/visualinspection/
               mkdir -p $(workspaces.ws.path)/masconfig/certs/predict/
-              #mkdir -p $(workspaces.ws.path)/masconfig/certs/aibroker/
+              mkdir -p $(workspaces.ws.path)/masconfig/certs/aibroker/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/iot/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/manage/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/monitor/
@@ -296,7 +294,7 @@ spec:
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/optimizer/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/visualinspection/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/predict/
-              #cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/aibroker/
+              cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/aibroker/
 
               # copy letsencrypt-certs secret to the name where maximo is expecting to find it.
               if oc get secret -n openshift-ingress router-certs-default; then
@@ -382,6 +380,11 @@ spec:
               export MONGODB_STORAGE_CLASS=$(params.rwo-storageclass)
               export UDS_STORAGE_CLASS=$(params.rwo-storageclass)
               export DRO_STORAGE_CLASS=$(params.rwo-storageclass)
+
+              #check ai broker public cert
+              #cat ansible-devops/roles/suite_certs/defaults/main.yml
+              wget -qO - "https://raw.githubusercontent.com/zxue/ansible-devops/master/ibm/mas_devops/roles/suite_certs/defaults/main.yml" > ansible-devops/roles/suite_certs/defaults/main.yml
+              #cat ansible-devops/roles/suite_certs/defaults/main.yml
 
               ansible-playbook ibm.mas_devops.oneclick_core
 
@@ -1206,12 +1209,12 @@ spec:
           value: "$(params.artifactory_username)"
         - name: artifactory_token
           value: "$(params.artifactory_token)"
-        - name: watsonxai_apikey
-          value: "$(params.watsonxai_apikey)"
-        - name: watsonxai_url
-          value: "$(params.watsonxai_url)"
-        - name: watsonxai_project_id
-          value: "$(params.watsonxai_project_id)"
+        - name: mas_airbroker_watsonxai_apikey
+          value: "$(params.mas_airbroker_watsonxai_apikey)"
+        - name: mas_airbroker_watsonxai_url
+          value: "$(params.mas_airbroker_watsonxai_url)"
+        - name: mas_airbroker_watsonxai_project_id
+          value: "$(params.mas_airbroker_watsonxai_project_id)"
         - name: mas_aibroker_channel
           value: "$(params.mas_aibroker_channel)"
 
@@ -1226,9 +1229,9 @@ spec:
           - name: uds-email
           - name: artifactory_username
           - name: artifactory_token
-          - name: watsonxai_apikey
-          - name: watsonxai_url
-          - name: watsonxai_project_id
+          - name: mas_airbroker_watsonxai_apikey
+          - name: mas_airbroker_watsonxai_url
+          - name: mas_airbroker_watsonxai_project_id
           - name: mas_aibroker_channel
 
         steps:
@@ -1239,6 +1242,9 @@ spec:
 
               mkdir -p $(workspaces.ws.path)/masconfig/minio/
               mkdir -p $(workspaces.ws.path)/masconfig/mariadb/
+
+              # Update storage class "ocs-storagecluster-cephfs" in mariadb-pvc.yml
+              # Update namespace "mas-inst1-aibroker" in maridb-np.yml 
 
               # download files form github repo or other location
               export MINIO_FOLDER="https://raw.githubusercontent.com/zxue/deploy-maximo-aibroker/main/minio/"
@@ -1275,29 +1281,29 @@ spec:
               export MAS_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
 
               # MINIO
-              export STORAGE_ACCESSKEY="minio123"
-              export STORAGE_SECRETKEY="minio123"
-              export STORAGE_SSL="false"
-              export STORAGE_PROVIDER="minio"
-              #export STORAGE_REGION="storage provider region"  
-              export STORAGE_PORT="9000"
-              export STORAGE_HOST="minio-service.minio.svc.cluster.local"
-              export STORAGE_PIPELINES_BUCKET="km-pipelines"
-              export STORAGE_TENANTS_BUCKET="km-tenants"
-              export STORAGE_TEMPLATES_BUCKET="km-templates"
+              export MAS_AIBROKER_STORAGE_ACCESSKEY="minio123"
+              export MAS_AIBROKER_STORAGE_SECRETKEY="minio123"
+              export MAS_AIBROKER_STORAGE_SSL="false"
+              export MAS_AIBROKER_STORAGE_PROVIDER="minio"
+              #export MAS_AIBROKER_STORAGE_REGION="storage provider region"  
+              export MAS_AIBROKER_STORAGE_PORT="9000"
+              export MAS_AIBROKER_STORAGE_HOST="minio-service.minio.svc.cluster.local"
+              export MAS_AIBROKER_STORAGE_PIPELINES_BUCKET="km-pipelines"
+              export MAS_AIBROKER_STORAGE_TENANTS_BUCKET="km-tenants"
+              export MAS_AIBROKER_STORAGE_TEMPLATES_BUCKET="km-templates"
 
               # WATSONX AI
-              export WATSONXAI_APIKEY=$(params.watsonxai_apikey)
-              export WATSONXAI_URL=$(params.watsonxai_url)
-              export WATSONXAI_PROJECT_ID=$(params.watsonxai_project_id)
+              export MAS_AIBROKER_WATSONXAI_APIKEY=$(params.mas_airbroker_watsonxai_apikey)
+              export MAS_AIBROKER_WATSONXAI_URL=$(params.mas_airbroker_watsonxai_url)
+              export MAS_AIBROKER_WATSONXAI_PROJECT_ID=$(params.mas_airbroker_watsonxai_project_id)
               export MAS_AIBROKER_CHANNEL=$(params.mas_aibroker_channel)
 
               # database
-              export DB_HOST="mariadb-instance.mariadb.svc.cluster.local"
-              export DB_PORT="3306"
-              export DB_USER="mariadb"
-              export DB_DATABASE="kmpipeline"
-              export DB_SECRET_NAME="ds-pipeline-db-instance"
-              export DB_SECRET_VALUE="mariadb"
+              export MAS_AIBROKER_DB_HOST="mariadb-instance.mariadb.svc.cluster.local"
+              export MAS_AIBROKER_DB_PORT="3306"
+              export MAS_AIBROKER_DB_USER="mariadb"
+              export MAS_AIBROKER_DB_DATABASE="kmpipeline"
+              export MAS_AIBROKER_DB_SECRET_NAME="ds-pipeline-db-instance"
+              export MAS_AIBROKER_DB_SECRET_VALUE="mariadb"
 
               ansible-playbook ibm.mas_devops.oneclick_add_aibroker
