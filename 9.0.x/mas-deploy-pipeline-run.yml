@@ -14,6 +14,11 @@ spec:
       value: "TechZone"
     - name: uds-lastname
       value: "Developer"
+    # Optionally change storageclass for ocpv
+    - name: rwx-storageclass
+      value: ocs-external-storageclass-cephfs
+    - name: rwo-storageclass
+      value: ocs-external-storageclass-cephfs
 
     # install MAS Core. This task may be skipped once done successfully
     - name: mas-install-core
@@ -66,13 +71,18 @@ spec:
       value: "xxx"
     - name: mas_aibroker_channel
       value: "9.0.x"
+    # cert location in ocpv
+    #- name: tlscert-secret
+    #  value: ingress-certificate-tls
+    #- name: tlscert-namespace
+    #  value: openshift-ingress
 
   workspaces:
     - name: ws
       volumeClaimTemplate:
         spec:
           accessModes:
-            - ReadWriteMany
+            - ReadWriteOnce
           resources:
             requests:
               storage: 1Gi

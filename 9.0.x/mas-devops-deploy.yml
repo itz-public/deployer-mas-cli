@@ -50,9 +50,17 @@ spec:
       type: string
       default: "false"
     - name: use-letsencrypt-certs
-      description: "use generated letsencrypt certs stored as a secret in the openshift-config namespace under letsencrypt-certs, if false, will generate self-signed certs"
+      description: "use generated letsencrypt certs stored as a secret must specify secret and namespace to locate certs"
       type: string
       default: "true"
+    - name: "tlscert-secret"
+      description: "location of TLS cert secret"
+      type: string
+      default: letsencrypt-certs
+    - name: "tlscert-namespace"
+      description: "namespace of TLS cert secret"
+      type: string
+      default: openshift-config
     - name: ibm-entitlement-key
       description: "IBM entitlement key. If not set, will use secret manager."
       type: string
@@ -74,10 +82,6 @@ spec:
       description: "desired RWO storageclass"
       type: string
       default: ocs-storagecluster-cephfs
-    - name: "tlscert-secret"
-      description: "location of TLS certs in openshift-config namespace"
-      type: string
-      default: letsencrypt-certs
     - name: "mas-catalog-version"
       description: "Maximo operator catalog version, e.g. v9-240730-amd64"
       type: string
@@ -255,6 +259,8 @@ spec:
       params:
         - name: TLSCERT_SECRET_LOCATION
           value: "$(params.tlscert-secret)"
+        - name: TLSCERT_SECRET_NAMESPACE
+          value: "$(params.tlscert-namespace)"
       workspaces:
         - name: ws
       taskSpec:
@@ -262,6 +268,7 @@ spec:
           - name: ws
         params:
           - name: TLSCERT_SECRET_LOCATION
+          - name: TLSCERT_SECRET_NAMESPACE
         steps:
           - name: get-tls-certs
             image: quay.io/congxdev/ibm-pak-ubi:latest
@@ -269,8 +276,8 @@ spec:
               ### this is the method to load certs to the mas installer
               mkdir -p $(workspaces.ws.path)/masconfig/certs/core/
               wget -qO - https://letsencrypt.org/certs/lets-encrypt-r3.pem > $(workspaces.ws.path)/masconfig/certs/core/ca.crt
-              oc get secret $(params.TLSCERT_SECRET_LOCATION) -n openshift-config -o jsonpath="{.data['tls\.key']}" | base64 -d > $(workspaces.ws.path)/masconfig/certs/core/tls.key
-              oc get secret $(params.TLSCERT_SECRET_LOCATION) -n openshift-config -o jsonpath="{.data['tls\.crt']}" | base64 -d > $(workspaces.ws.path)/masconfig/certs/core/tls.crt
+              oc get secret $(params.TLSCERT_SECRET_LOCATION) -n $(params.TLSCERT_SECRET_NAMESPACE) -o jsonpath="{.data['tls\.key']}" | base64 -d > $(workspaces.ws.path)/masconfig/certs/core/tls.key
+              oc get secret $(params.TLSCERT_SECRET_LOCATION) -n $(params.TLSCERT_SECRET_NAMESPACE) -o jsonpath="{.data['tls\.crt']}" | base64 -d > $(workspaces.ws.path)/masconfig/certs/core/tls.crt
               ls $(workspaces.ws.path)/masconfig/certs/core/
               cat $(workspaces.ws.path)/masconfig/certs/core/tls.key
               cat $(workspaces.ws.path)/masconfig/certs/core/tls.crt
@@ -300,7 +307,7 @@ spec:
               if oc get secret -n openshift-ingress router-certs-default; then
                 echo "router-certs-default secret already exists"
               else
-                oc get secret letsencrypt-certs -n openshift-ingress -o yaml | yq '.metadata["name"]="router-certs-default"' | oc apply -n openshift-ingress -f -
+                oc get secret $(params.TLSCERT_SECRET_LOCATION) -n $(params.TLSCERT_SECRET_NAMESPACE) -o yaml | yq '.metadata["name"]="router-certs-default"' | oc apply -n openshift-ingress -f -
               fi
               exit
     - name: install-mas-core
