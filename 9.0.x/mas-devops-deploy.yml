@@ -473,6 +473,7 @@ spec:
               export CPD_SERVICE_BLOCK_STORAGE_CLASS=$(params.rwo-storageclass)
 
               # Cloud Pak for Data Platform (~1 1/2 hours)
+              ROLE_NAME=ibm_catalogs ansible-playbook ibm.mas_devops.run_role
               ROLE_NAME=cp4d ansible-playbook ibm.mas_devops.run_role
     - name: install-cp4d-db2
       when:
