@@ -316,7 +316,7 @@ spec:
           operator: in
           values: ["true"]
       retries: 3
-      timeout: "6h"
+      timeout: "12h"
       runAfter:
         - get-tls-certs
       workspaces:
@@ -400,8 +400,8 @@ spec:
         - input: "$(params.mas-install-manage)"
           operator: in
           values: ["true"]
-      retries: 3
-      timeout: "6h"
+      retries: 6
+      timeout: "12h"
       runAfter:
         - get-tls-certs
       workspaces:
@@ -480,14 +480,15 @@ spec:
               export CPD_SERVICE_BLOCK_STORAGE_CLASS=$(params.rwo-storageclass)
 
               # Cloud Pak for Data Platform (~1 1/2 hours)
+              ROLE_NAME=ibm_catalogs ansible-playbook ibm.mas_devops.run_role
               ROLE_NAME=cp4d ansible-playbook ibm.mas_devops.run_role
     - name: install-cp4d-db2
       when:
         - input: "$(params.mas-install-manage)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "6h"
+      retries: 6
+      timeout: "12h"
       runAfter:
         - install-cp4d-platform
       workspaces:
@@ -572,8 +573,8 @@ spec:
         - input: "$(params.mas-install-predict)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "6h"
+      retries: 3
+      timeout: "12h"
       runAfter:
         - install-cp4d-platform
       workspaces:
@@ -636,8 +637,8 @@ spec:
         - input: "$(params.mas-install-predict)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "6h"
+      retries: 3
+      timeout: "12h"
       runAfter:
         - install-cp4d-platform
       workspaces:
@@ -701,8 +702,8 @@ spec:
         - input: "$(params.mas-install-predict)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "6h"
+      retries: 3
+      timeout: "12h"
       runAfter:
         - install-cp4d-platform
       workspaces:
@@ -768,8 +769,8 @@ spec:
         - input: "$(params.mas-install-predict)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "6h"
+      retries: 3
+      timeout: "12h"
       runAfter:
         - install-cp4d-platform
       workspaces:
@@ -836,8 +837,8 @@ spec:
         - input: "$($(params.cpd-install-spss)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "6h"
+      retries: 3
+      timeout: "12h"
       runAfter:
         - install-cp4d-platform
       workspaces:
@@ -902,8 +903,8 @@ spec:
         - input: "$(params.mas-install-manage)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "10h"
+      retries: 3
+      timeout: "12h"
       runAfter:
         - install-mas-core
         - install-cp4d-db2
@@ -1003,10 +1004,11 @@ spec:
         - input: "$(params.mas-install-iot)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "6h"
+      retries: 3
+      timeout: "12h"
       runAfter:
         - install-mas-core
+        - install-cp4d-db2
       workspaces:
         - name: ws
       params:
@@ -1052,8 +1054,8 @@ spec:
         - input: "$(params.mas-install-monitor)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "6h"
+      retries: 3
+      timeout: "12h"
       runAfter:
         - install-iot
       workspaces:
@@ -1096,8 +1098,8 @@ spec:
         - input: "$(params.mas-install-predict)"
           operator: in
           values: ["true"]
-      retries: 2
-      timeout: "6h"
+      retries: 3
+      timeout: "12h"
       runAfter:
         - install-monitor
         - install-manage
@@ -1196,7 +1198,7 @@ spec:
           operator: in
           values: ["true"]
       retries: 3
-      timeout: "8h"
+      timeout: "12h"
       runAfter:
         - install-mas-core
       workspaces:
