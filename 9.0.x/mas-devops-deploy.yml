@@ -29,6 +29,9 @@ spec:
     - name: mas-cp4d-install-cognos
       type: string
       default: "false"
+    - name: mas-install-visualinspection
+      type: string
+      default: "false"
     - name: mas-install-iot
       type: string
       description: "install MAS iot"
@@ -83,9 +86,9 @@ spec:
       type: string
       default: ocs-storagecluster-cephfs
     - name: "mas-catalog-version"
-      description: "Maximo operator catalog version, e.g. v9-240730-amd64"
+      description: "Maximo operator catalog version. Check https://ibm-mas.github.io/cli/catalogs/"
       type: string
-      default: "v9-240827-amd64"
+      default: v9-241003-amd64
     - name: mas-channel
       description: "channel to subscribe to"
       type: string
@@ -999,6 +1002,74 @@ spec:
               export CPD_SERVICE_BLOCK_STORAGE_CLASS=$(params.rwo-storageclass)
 
               ansible-playbook ibm.mas_devops.oneclick_add_manage
+
+    - name: install-visualinspection
+      when:
+        - input: "$(params.mas-install-visualinspection)"
+          operator: in
+          values: ["true"]
+      retries: 3
+      timeout: "12h"
+      runAfter:
+        - install-mas-core
+      workspaces:
+        - name: ws
+      params:
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"    
+        - name: rwx-storageclass
+          value: "$(params.rwx-storageclass)"
+        - name: rwo-storageclass
+          value: "$(params.rwo-storageclass)"
+        - name: uds-email
+          value: "$(params.uds-email)"
+        - name: uds-firstname
+          value: "$(params.uds-firstname)"
+        - name: uds-lastname
+          value: "$(params.uds-lastname)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: mas-catalog-version
+          - name: mas-channel
+          - name: rwx-storageclass
+          - name: rwo-storageclass
+          - name: uds-email
+          - name: uds-firstname
+          - name: uds-lastname
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=wsapp
+              export MAS_APPWS_BINDINGS_JDBC=workspace-application
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
+
+              export DRO_CONTACT_EMAIL=$(params.uds-email)
+              export DRO_CONTACT_FIRSTNAME=$(params.uds-firstname)
+              export DRO_CONTACT_LASTNAME=$(params.uds-lastname)
+              export DRO_NAMESPACE=ibm-dro
+              
+              export GPU_DRIVER_VERSION=565.57.01
+
+              ansible-playbook ibm.mas_devops.oneclick_add_visualinspection
+
     - name: install-iot
       when:
         - input: "$(params.mas-install-iot)"
