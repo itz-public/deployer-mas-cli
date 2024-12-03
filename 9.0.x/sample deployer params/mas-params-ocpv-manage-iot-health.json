@@ -9,7 +9,9 @@
             "mas-install-core": "true",
             "mas-install-manage": "true",
             "mas-install-demo-data": "true",
-            "mas-cp4d-install-cognos": "true"
+            "mas-cp4d-install-cognos": "true",
+            "mas-install-iot": "true",
+            "mas-install-health": "true"
         }
     }
 }
