@@ -307,11 +307,11 @@ spec:
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/aibroker/
 
               # copy letsencrypt-certs secret to the name where maximo is expecting to find it.
-              if oc get secret -n openshift-ingress router-certs-default; then
-                echo "router-certs-default secret already exists"
-              else
-                oc get secret $(params.TLSCERT_SECRET_LOCATION) -n $(params.TLSCERT_SECRET_NAMESPACE) -o yaml | yq '.metadata["name"]="router-certs-default"' | oc apply -n openshift-ingress -f -
-              fi
+              #if oc get secret -n openshift-ingress router-certs-default; then
+              #  echo "router-certs-default secret already exists"
+              #else
+              #  oc get secret $(params.TLSCERT_SECRET_LOCATION) -n $(params.TLSCERT_SECRET_NAMESPACE) -o yaml | yq '.metadata["name"]="router-certs-default"' | oc apply -n openshift-ingress -f -
+              #fi
               exit
     - name: install-mas-core
       when:
@@ -481,6 +481,8 @@ spec:
               export CPD_METADATA_STORAGE_CLASS=$(params.rwx-storageclass)
               export CPD_SERVICE_STORAGE_CLASS=$(params.rwx-storageclass)
               export CPD_SERVICE_BLOCK_STORAGE_CLASS=$(params.rwo-storageclass)
+
+              mkdir -p $MAS_CONFIG_DIR
 
               # Cloud Pak for Data Platform (~1 1/2 hours)
               ROLE_NAME=ibm_catalogs ansible-playbook ibm.mas_devops.run_role
