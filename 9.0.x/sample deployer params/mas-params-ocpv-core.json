@@ -5,8 +5,8 @@
             "rwx-storageclass": "ocs-external-storagecluster-cephfs",
             "rwo-storageclass": "ocs-external-storagecluster-cephfs",
             "use-letsencrypt-certs": "true",
-            "tlscert-secret": "ingress-certificate-tls",
-            "tlscert-namespace": "openshift-ingress",
+            "tlscert-secret": "user-serving-cert-000",
+            "tlscert-namespace": "openshift-kube-apiserver",
             "mas-install-core": "true"
         }
     },
