@@ -4,9 +4,33 @@
         "params": {
             "rwx-storageclass": "ocs-external-storagecluster-cephfs",
             "rwo-storageclass": "ocs-external-storagecluster-cephfs",
+            "use-letsencrypt-certs": "true",
             "tlscert-secret": "ingress-certificate-tls",
             "tlscert-namespace": "openshift-ingress",
             "mas-install-core": "true"
         }
+    },
+    "certs": {
+        "SAN": [
+            "admin.inst1.apps",
+            "auth.inst1.apps",
+            "api.inst1.apps",
+            "home.inst1.apps",
+            "masdev.home.inst1.apps",
+            "masdev.manage.inst1.apps",
+            "masdev-all.manage.inst1.apps",
+            "masdev-cron.manage.inst1.apps",
+            "masdev-mea.manage.inst1.apps",
+            "masdev-rpt.manage.inst1.apps",
+            "masdev-ui.manage.inst1.apps",
+            "maxinst.manage.inst1.apps",
+            "masdev.health.inst1.apps",
+            "masdev-all.health.inst1.apps",
+            "masdev-cron.health.inst1.apps",
+            "masdev-mea.health.inst1.apps",
+            "masdev-rpt.health.inst1.apps",
+            "masdev-ui.health.inst1.apps",
+            "maxinst.health.inst1.apps"
+        ]  
     }
 }

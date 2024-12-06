@@ -87,11 +87,6 @@ spec:
       value: "xxx"
     - name: mas_aibroker_channel
       value: "9.0.x"
-    # cert location in ocpv
-    #- name: tlscert-secret
-    #  value: ingress-certificate-tls
-    #- name: tlscert-namespace
-    #  value: openshift-ingress
 
   workspaces:
     - name: ws
