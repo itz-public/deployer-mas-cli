@@ -88,7 +88,7 @@ spec:
     - name: "mas-catalog-version"
       description: "Maximo operator catalog version. Check https://ibm-mas.github.io/cli/catalogs/"
       type: string
-      default: v9-241003-amd64
+      default: v9-241107-amd64
     - name: mas-channel
       description: "channel to subscribe to"
       type: string
