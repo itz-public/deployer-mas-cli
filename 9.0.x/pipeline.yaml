@@ -670,7 +670,7 @@ spec:
           - name: cpd-install-spss
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:
+            image: quay.io/ibmmas/cli:11.9.1
             script: |
               #!/usr/bin/env bash
               
