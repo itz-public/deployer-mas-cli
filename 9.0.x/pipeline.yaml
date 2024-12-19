@@ -172,7 +172,7 @@ spec:
               #!/usr/bin/env bash
 
               # Get the status of the ImageRegistry resource
-              status=$(oc get config cluster -o jsonpath='{.items[0].status.conditions[?(@.type=="Available")].Reason}')
+              status=$(oc get config -o jsonpath='{.items[0].status.conditions[?(@.type=="Available")].reason}')
 
               if [[ "$status" == "Ready" ]]; then
                 echo "OpenShift Container Registry is ready"
