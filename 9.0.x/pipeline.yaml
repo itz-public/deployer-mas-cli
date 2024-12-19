@@ -164,26 +164,33 @@ spec:
             oc patch configmap/pipeline-output -p '{"data":{"Status":"Deployment Pipeline completed to install mas core."}}'
   tasks:
     - name: check-container-registry
-      taskSpec:
-        steps:
-          - name: check-registry
-            image: quay.io/openshift/origin-cli:4.10
-            script: |
-              #!/usr/bin/env bash
+      params:
+        - name: SCRIPT
+          value: |
+            status=$(oc get config -o jsonpath='{.items[0].status.conditions[?(@.type=="Available")].reason}')
 
-              # Get the status of the ImageRegistry resource
+            TIMEOUT_SECONDS=300
+            while [[ "$status" != "Ready" ]] && [[ $SECONDS -lt $TIMEOUT_SECONDS ]]; do
+              echo "OpenShift Container Registry is not ready. Current status: $status"
+
+              # Apply the patch commands
+              oc patch config.imageregistry.operator.openshift.io/cluster --type=merge -p '{"spec":{"storage":{"emptyDir":{}}}}'
+              oc patch config.imageregistry.operator.openshift.io/cluster --type=merge -p '{"spec":{"managementState":"Managed"}}'
+
+              # Check status after a short delay to avoid overwhelming the server
+              sleep 10
+
+              # Update status 
               status=$(oc get config -o jsonpath='{.items[0].status.conditions[?(@.type=="Available")].reason}')
+            done
 
-              if [[ "$status" == "Ready" ]]; then
-                echo "OpenShift Container Registry is ready"
-                exit 0
-              else
-                echo "OpenShift Container Registry is not ready.  Reason: $status"
-                oc patch config.imageregistry.operator.openshift.io/cluster --type=merge -p '{"spec":{"storage":{"emptyDir":{}}}}'
-                oc patch config.imageregistry.operator.openshift.io/cluster --type=merge -p '{"spec":{"managementState":"Managed"}}'
-              fi
-
+            if [[ "$status" == "Ready" ]]; then
+              echo "OpenShift Container Registry is ready"
               exit 0
+            else
+              echo "OpenShift Container Registry failed to become ready after $TIMEOUT_SECONDS seconds." >&2
+              exit 1
+            fi
     - name: get-ibm-entitlement-key
       when:
         - input: "$(params.ibm-entitlement-key)"
