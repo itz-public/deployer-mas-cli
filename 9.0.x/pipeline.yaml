@@ -164,6 +164,9 @@ spec:
             oc patch configmap/pipeline-output -p '{"data":{"Status":"Deployment Pipeline completed to install mas core."}}'
   tasks:
     - name: check-container-registry
+      taskRef:
+        kind: Task
+        name: ibm-pak
       params:
         - name: SCRIPT
           value: |
@@ -181,7 +184,7 @@ spec:
               sleep 10
 
               # Update status 
-              status=$(oc get config -o jsonpath='{.items[0].status.conditions[?(@.type=="Available")].reason}')
+              status=$(oc get configs.imageregistry.operator.openshift.io cluster -o jsonpath='{.status.conditions[?(@.type=="Available")].reason}')
             done
 
             if [[ "$status" == "Ready" ]]; then
