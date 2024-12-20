@@ -170,7 +170,7 @@ spec:
       params:
         - name: SCRIPT
           value: |
-            status=$(oc get config -o jsonpath='{.items[0].status.conditions[?(@.type=="Available")].reason}')
+            status=$(oc get configs.imageregistry.operator.openshift.io cluster -o jsonpath='{.status.conditions[?(@.type=="Available")].reason}')
 
             TIMEOUT_SECONDS=300
             while [[ "$status" != "Ready" ]] && [[ $SECONDS -lt $TIMEOUT_SECONDS ]]; do
