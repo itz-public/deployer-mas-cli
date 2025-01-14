@@ -205,7 +205,7 @@ spec:
       retries: 2
       params:
         - name: KEY_ID
-          value: 968d7819-f2c5-7b67-c420-3c6bfd51521e
+          value: 2d52b201-117a-35ea-71f0-9781a93fbed4
         - name: SECRETS_MANAGER_ENDPOINT_URL
           value: >-
             https://afa20521-cd75-4864-843f-e59fd0ffd49d.us-south.secrets-manager.appdomain.cloud
