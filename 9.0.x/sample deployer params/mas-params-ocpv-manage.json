@@ -16,6 +16,7 @@
     },
     "certs": {
         "SAN": [
+            "*.inst1.apps",
             "*.home.inst1.apps",
             "*.iot.inst1.apps",
             "*.messaging.iot.inst1.apps",
