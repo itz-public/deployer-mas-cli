@@ -26,6 +26,7 @@
             "*.api.monitor.inst1.apps",
             "*.manage.inst1.apps",
             "*.health.inst1.apps",
+            "*.optimizer.inst1.apps",
             "*.api.optimizer.inst1.apps"
         ]  
     }
