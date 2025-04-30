@@ -404,7 +404,6 @@ spec:
               export MAS_CHANNEL=$(params.mas-channel)
 
               export DRO_ACTION=install-dro
-              export BAS_PROVIDER=DRO
               export DRO_CONTACT_EMAIL=$(params.uds-email)
               export DRO_CONTACT_FIRSTNAME=$(params.uds-firstname)
               export DRO_CONTACT_LASTNAME=$(params.uds-lastname)
@@ -1018,7 +1017,7 @@ spec:
               export MANAGE_AIO_FLAG=false
               export MAS_APP_ID=manage
 
-              export MAS_APPWS_COMPONENTS="base=latest,health=latest"
+              export MAS_APPWS_COMPONENTS="base=latest,health=latest,spatial=latest,strategize=latest"
               export MAS_APP_SETTINGS_DEMODATA=$(params.install-demo-data)
 
               export CPD_INSTALL_PLATFORM="true"
@@ -1146,6 +1145,8 @@ spec:
               export MAS_CHANNEL=$(params.mas-channel)
 
               export MAS_APP_SETTINGS_IOT_FPL_PVC_STORAGE_CLASS=$(params.rwo-storageclass)
+            
+              chmod -R 777 $MAS_CONFIG_DIR
 
               ansible-playbook ibm.mas_devops.oneclick_add_iot
     - name: install-monitor
