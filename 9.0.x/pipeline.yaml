@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: mas-devops-deploy
+  name: mas-devops-deploy-rtx
   namespace: default
 spec:
   workspaces:
@@ -512,7 +512,7 @@ spec:
               # Cloud Pak for Data Platform (~1 1/2 hours)
               ROLE_NAME=ibm_catalogs ansible-playbook ibm.mas_devops.run_role
               ROLE_NAME=cp4d ansible-playbook ibm.mas_devops.run_role
-    - name: install-cp4d-db2
+    - name: install-db2
       when:
         - input: "$(params.mas-install-manage)"
           operator: in
@@ -520,7 +520,7 @@ spec:
       retries: 6
       timeout: "12h"
       runAfter:
-        - install-cp4d-platform
+        - install-mas-core
       workspaces:
         - name: ws
       params:
@@ -657,7 +657,6 @@ spec:
               export CPD_INSTALL_WML=$(params.cpd-platform-services)
               export CPD_INSTALL_SPARK=$(params.cpd-platform-services)
               export CPD_INSTALL_OPENSCALE=$(params.cpd-platform-services)
-              export CPD_INSTALL_DISCOVERY=$(params.cpd-platform-services)
               export CPD_INSTALL_SPSS=$(params.cpd-install-spss)
 
               export CPD_SERVICE_NAME=wsl
@@ -937,7 +936,7 @@ spec:
       timeout: "12h"
       runAfter:
         - install-mas-core
-        - install-cp4d-db2
+        - install-db2
       workspaces:
         - name: ws
       params:
@@ -1017,7 +1016,7 @@ spec:
               export MANAGE_AIO_FLAG=false
               export MAS_APP_ID=manage
 
-              export MAS_APPWS_COMPONENTS="base=latest,health=latest,spatial=latest,strategize=latest"
+              export MAS_APPWS_COMPONENTS="base=latest,health=latest,spatial=latest,strategize=latest,utilities=latest,transportation=latest,serviceprovider=latest"
               export MAS_APP_SETTINGS_DEMODATA=$(params.install-demo-data)
 
               export CPD_INSTALL_PLATFORM="true"
@@ -1106,7 +1105,7 @@ spec:
       timeout: "12h"
       runAfter:
         - install-mas-core
-        - install-cp4d-db2
+        - install-db2
       workspaces:
         - name: ws
       params:
@@ -1146,6 +1145,7 @@ spec:
 
               export MAS_APP_SETTINGS_IOT_FPL_PVC_STORAGE_CLASS=$(params.rwo-storageclass)
             
+              echo "!@#"
               chmod -R 777 $MAS_CONFIG_DIR
 
               ansible-playbook ibm.mas_devops.oneclick_add_iot
