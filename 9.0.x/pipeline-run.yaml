@@ -92,8 +92,9 @@ spec:
     - name: ws
       volumeClaimTemplate:
         spec:
+          storageClassName: ocs-external-storagecluster-cephfs
           accessModes:
-            - ReadWriteOnce
+            - ReadWriteMany
           resources:
             requests:
               storage: 1Gi
