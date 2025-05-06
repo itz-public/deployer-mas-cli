@@ -44,6 +44,10 @@ spec:
     - name: mas-cp4d-install-cognos
       value: "false"
 
+    # install MAS Optimizer
+    - name: install-optimizer
+      value: "true"
+
     # install MAS Visual Inspection
     - name: mas-install-visualinspection
       value: "false"
