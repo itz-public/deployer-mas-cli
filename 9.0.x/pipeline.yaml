@@ -598,7 +598,7 @@ spec:
               export MANAGE_AIO_FLAG=false
               export MAS_APP_ID=manage
 
-              export MAS_APPWS_COMPONENTS="base=latest,health=latest,spatial=latest,strategize=latest,utilities=latest,transportation=latest,serviceprovider=latest"
+              export MAS_APPWS_COMPONENTS="base=latest,health=latest,spatial=latest,strategize=latest,utilities=latest,transportation=latest,serviceprovider=latest,hse=latest"
               export MAS_APP_SETTINGS_DEMODATA=$(params.install-demo-data)
 
               export CPD_INSTALL_PLATFORM="true"
