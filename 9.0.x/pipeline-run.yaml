@@ -6,7 +6,7 @@ metadata:
   namespace: default
 spec:
   pipelineRef:
-      name: mas-devops-deploy-rtx
+      name: mas-devops-deploy-rtx-test
   params:
     - name: uds-email
       value: "dev-techzone@ibm.com"
@@ -45,7 +45,7 @@ spec:
       value: "false"
 
     # install MAS Optimizer
-    - name: install-optimizer
+    - name: mas-install-optimizer
       value: "true"
 
     # install MAS Visual Inspection
