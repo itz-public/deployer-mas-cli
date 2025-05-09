@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: mas-devops-deploy-rtx-test
+  name: mas-devops-deploy
   namespace: default
 spec:
   workspaces:
@@ -21,7 +21,7 @@ spec:
     - name: mas-cp4d-version
       type: string
       description: "Supported CP4D version for MAS on OpenShift"
-      default: "4.8.0"
+      default: "5.0.0"
     - name: mas-install-manage
       type: string
       description: "controls whether Maximo Manage and CP4D is installed"
@@ -35,6 +35,10 @@ spec:
     - name: mas-install-visualinspection
       type: string
       default: "false"
+    - name: run-kafka-fix
+      type: string
+      description: "Fix Strimzi Operator"
+      default: "false"  
     - name: mas-install-iot
       type: string
       description: "install MAS iot"
@@ -91,7 +95,7 @@ spec:
     - name: "mas-catalog-version"
       description: "Maximo operator catalog version. Check https://ibm-mas.github.io/cli/catalogs/"
       type: string
-      default: v9-241205-amd64
+      default: v9-250501-amd64
     - name: mas-channel
       description: "channel to subscribe to"
       type: string
@@ -675,6 +679,7 @@ spec:
             image: quay.io/ibmmas/cli:latest
             script: |
               #!/usr/bin/env bash
+
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
               export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
               export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
@@ -689,6 +694,104 @@ spec:
               export MAS_APP_SETTINGS_IOT_FPL_PVC_STORAGE_CLASS=$(params.rwo-storageclass)
 
               ansible-playbook ibm.mas_devops.oneclick_add_iot
+    - name: run-kafka-fix
+      when:
+        - input: "$(params.run-kafka-fix)"
+          operator: in
+          values: ["true"]
+      retries: 3
+      timeout: "12h"
+      runAfter:
+        - install-mas-core
+      workspaces:
+        - name: ws
+      taskSpec:
+        workspaces:
+          - name: ws
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              NAMESPACE="strimzi"
+              SUBSCRIPTION_NAME="strimzi-kafka-operator"
+              CSV_NAME="strimzi-cluster-operator.v0.46.0"
+              TARGET_CHANNEL="strimzi-0.45.x"
+              MAX_DURATION_SECONDS=$((40 * 60))  # 40 minutes
+              INTERVAL_SECONDS=5
+              ELAPSED_SECONDS=0
+
+              echo "Starting subscription monitor for '$SUBSCRIPTION_NAME' in namespace '$NAMESPACE' (timeout: 40 minutes)..."
+
+              while [ $ELAPSED_SECONDS -lt $MAX_DURATION_SECONDS ]; do
+                if oc get subscriptions.operators.coreos.com "$SUBSCRIPTION_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+                  CURRENT_CHANNEL=$(oc get subscriptions.operators.coreos.com "$SUBSCRIPTION_NAME" -n "$NAMESPACE" -o jsonpath="{.spec.channel}")
+                  
+                  echo "[$(date +'%H:%M:%S')] Subscription found. Current channel: $CURRENT_CHANNEL"
+                  
+                  if [ "$CURRENT_CHANNEL" == "stable" ]; then
+                    echo "Subscription is using 'stable' channel. Deleting subscription and operator..."
+
+                    # Delete the Subscription
+                    oc delete subscriptions.operators.coreos.com "$SUBSCRIPTION_NAME" -n "$NAMESPACE"
+                    echo "Waiting 5 minutes for the CSV."
+                    sleep 3m
+                    # Delete the Operator CSV (find the installed CSV for this operator)
+                    
+                    if [ -n "$CSV_NAME" ]; then
+                      echo "Deleting ClusterServiceVersion '$CSV_NAME'..."
+                      oc delete csv "$CSV_NAME" -n "$NAMESPACE"
+                    else
+                      echo "No ClusterServiceVersion found for operator '$SUBSCRIPTION_NAME'."
+                    fi
+
+                    # Wait until both are deleted
+                    echo "Waiting for subscription deletion..."
+                    while oc get subscriptions.operators.coreos.com "$SUBSCRIPTION_NAME" -n "$NAMESPACE" > /dev/null 2>&1; do
+                      sleep 2
+                    done
+
+                    if [ -n "$CSV_NAME" ]; then
+                      echo "Waiting for operator (CSV) deletion..."
+                      while oc get csv "$CSV_NAME" -n "$NAMESPACE" > /dev/null 2>&1; do
+                        sleep 2
+                      done
+                    fi
+
+                    echo "Subscription and Operator deleted."
+
+                    # Recreate the Subscription with target channel
+                    echo "Recreating subscription with channel '$TARGET_CHANNEL'..."
+                    cat <<EOF | oc apply -f -
+                                apiVersion: operators.coreos.com/v1alpha1
+                                kind: Subscription
+                                metadata:
+                                  name: $SUBSCRIPTION_NAME
+                                  namespace: $NAMESPACE
+                                spec:
+                                  channel: $TARGET_CHANNEL
+                                  installPlanApproval: Automatic
+                                  name: $SUBSCRIPTION_NAME
+                                  source: community-operators
+                                  sourceNamespace: openshift-marketplace
+              EOF
+
+                    echo "Subscription recreated pointing to channel '$TARGET_CHANNEL'. Monitoring will stop."
+                    exit 0
+                  else
+                    echo "Subscription is not using 'stable' (currently '$CURRENT_CHANNEL'). No action needed."
+                  fi
+                else
+                  echo "[$(date +'%H:%M:%S')] Subscription not found yet. Waiting for creation..."
+                fi
+
+                sleep $INTERVAL_SECONDS
+                ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
+              done
+
+              echo "Timeout reached (40 minutes). Subscription monitor stopped without needing intervention."
+              exit 1
+
     - name: install-monitor
       when:
         - input: "$(params.mas-install-monitor)"

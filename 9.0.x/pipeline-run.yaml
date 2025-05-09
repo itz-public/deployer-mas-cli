@@ -6,7 +6,7 @@ metadata:
   namespace: default
 spec:
   pipelineRef:
-      name: mas-devops-deploy-rtx-test
+      name: mas-devops-deploy
   params:
     - name: uds-email
       value: "dev-techzone@ibm.com"
@@ -52,6 +52,8 @@ spec:
     - name: mas-install-visualinspection
       value: "false"
 
+    - name: run-kafka-fix
+      value: "true"
     # install MAS IoT and Monitor, depending on MAS Core
     - name: mas-install-iot
       value: "true"
