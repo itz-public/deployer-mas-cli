@@ -26,6 +26,78 @@ spec:
       type: string
       description: "controls whether Maximo Manage and CP4D is installed"
       default: "true"
+    - name: mas-manage-component-acm
+      type: string
+      description: "controls whether Maximo Manage with acm is installed"
+      default: "false"
+    - name: mas-manage-component-aviation
+      type: string
+      description: "controls whether Maximo Manage with aviation is installed"
+      default: "false"
+    - name: mas-manage-component-civil
+      type: string
+      description: "controls whether Maximo Manage with civil is installed"
+      default: "false"
+    - name: mas-manage-component-envizi
+      type: string
+      description: "controls whether Maximo Manage with envizi is installed"
+      default: "false"
+    - name: mas-manage-component-health
+      type: string
+      description: "controls whether Maximo Manage with health is installed"
+      default: "false"
+    - name: mas-manage-component-hse
+      type: string
+      description: "controls whether Maximo Manage with hse is installed"
+      default: "false"
+    - name: mas-manage-component-icd
+      type: string
+      description: "controls whether Maximo Manage with icd is installed"
+      default: "false"
+    - name: mas-manage-component-nuclear
+      type: string
+      description: "controls whether Maximo Manage with nuclear is installed"
+      default: "false"
+    - name: mas-manage-component-oilandgas
+      type: string
+      description: "controls whether Maximo Manage with oilandgas is installed"
+      default: "false"
+    - name: mas-manage-component-oracleadapter
+      type: string
+      description: "controls whether Maximo Manage with oracleadapter is installed"
+      default: "false"
+    - name: mas-manage-component-sapadapter
+      type: string
+      description: "controls whether Maximo Manage with sapadapter is installed"
+      default: "false"
+    - name: mas-manage-component-serviceprovider
+      type: string
+      description: "controls whether Maximo Manage with serviceprovider is installed"
+      default: "false"
+    - name: mas-manage-component-spatial
+      type: string
+      description: "controls whether Maximo Manage with spatial is installed"
+      default: "false"
+    - name: mas-manage-component-strategize
+      type: string
+      description: "controls whether Maximo Manage with strategize is installed"
+      default: "false"
+    - name: mas-manage-component-transportation
+      type: string
+      description: "controls whether Maximo Manage with transportation is installed"
+      default: "false"
+    - name: mas-manage-component-tririga
+      type: string
+      description: "controls whether Maximo Manage with tririga is installed"
+      default: "false"
+    - name: mas-manage-component-utilities
+      type: string
+      description: "controls whether Maximo Manage with utilities is installed"
+      default: "false"
+    - name: mas-manage-component-workday
+      type: string
+      description: "controls whether Maximo Manage with workday is installed"
+      default: "false"
     - name: mas-cp4d-install-cognos
       type: string
       default: "false"
@@ -460,6 +532,42 @@ spec:
           value: "$(params.rwx-storageclass)"
         - name: rwo-storageclass
           value: "$(params.rwo-storageclass)"
+        - name: mas-manage-component-acm
+          value: "$(params.mas-manage-component-acm)"
+        - name: mas-manage-component-aviation
+          value: "$(params.mas-manage-component-aviation)"
+        - name: mas-manage-component-civil
+          value: "$(params.mas-manage-component-civil)"
+        - name: mas-manage-component-envizi
+          value: "$(params.mas-manage-component-envizi)"
+        - name: mas-manage-component-health
+          value: "$(params.mas-manage-component-health)"
+        - name: mas-manage-component-hse
+          value: "$(params.mas-manage-component-hse)"
+        - name: mas-manage-component-icd
+          value: "$(params.mas-manage-component-icd)"
+        - name: mas-manage-component-nuclear
+          value: "$(params.mas-manage-component-nuclear)"
+        - name: mas-manage-component-oilandgas
+          value: "$(params.mas-manage-component-oilandgas)"
+        - name: mas-manage-component-oracleadapter
+          value: "$(params.mas-manage-component-oracleadapter)"
+        - name: mas-manage-component-sapadapter
+          value: "$(params.mas-manage-component-sapadapter)"
+        - name: mas-manage-component-serviceprovider
+          value: "$(params.mas-manage-component-serviceprovider)"
+        - name: mas-manage-component-spatial
+          value: "$(params.mas-manage-component-spatial)"
+        - name: mas-manage-component-strategize
+          value: "$(params.mas-manage-component-strategize)"
+        - name: mas-manage-component-transportation
+          value: "$(params.mas-manage-component-transportation)"
+        - name: mas-manage-component-tririga
+          value: "$(params.mas-manage-component-tririga)"
+        - name: mas-manage-component-utilities
+          value: "$(params.mas-manage-component-utilities)"
+        - name: mas-manage-component-workday
+          value: "$(params.mas-manage-component-workday)"
       taskSpec:
         workspaces:
           - name: ws
@@ -473,6 +581,24 @@ spec:
           - name: mas-cp4d-install-cognos
           - name: rwx-storageclass
           - name: rwo-storageclass
+          - name: mas-manage-component-acm
+          - name: mas-manage-component-aviation
+          - name: mas-manage-component-civil
+          - name: mas-manage-component-envizi
+          - name: mas-manage-component-health
+          - name: mas-manage-component-hse
+          - name: mas-manage-component-icd
+          - name: mas-manage-component-nuclear
+          - name: mas-manage-component-oilandgas
+          - name: mas-manage-component-oracleadapter
+          - name: mas-manage-component-sapadapter
+          - name: mas-manage-component-serviceprovider
+          - name: mas-manage-component-spatial
+          - name: mas-manage-component-strategize
+          - name: mas-manage-component-transportation
+          - name: mas-manage-component-tririga
+          - name: mas-manage-component-utilities
+          - name: mas-manage-component-workday
         steps:
           - name: run-mas-cli
             image: quay.io/ibmmas/cli:latest
@@ -518,7 +644,49 @@ spec:
               export MANAGE_AIO_FLAG=false
               export MAS_APP_ID=manage
 
-              export MAS_APPWS_COMPONENTS="base=latest,health=latest,spatial=latest,strategize=latest,utilities=latest,transportation=latest,serviceprovider=latest,hse=latest"
+              COMPONENTS="base=latest"
+
+              if [[ "$(params.mas-manage-component-acm)" == "true" ]]; then
+                COMPONENTS+=",acm=latest"
+              if [[ "$(params.mas-manage-component-aviation)" == "true" ]]; then
+                COMPONENTS+=",aviation=latest"
+              if [[ "$(params.mas-manage-component-civil)" == "true" ]]; then
+                COMPONENTS+=",civil=latest"
+              if [[ "$(params.mas-manage-component-envizi)" == "true" ]]; then
+                COMPONENTS+=",envizi=latest"
+              if [[ "$(params.mas-manage-component-health)" == "true" ]]; then
+                COMPONENTS+=",health=latest"
+              if [[ "$(params.mas-manage-component-hse)" == "true" ]]; then
+                COMPONENTS+=",hse=latest"
+              if [[ "$(params.mas-manage-component-icd)" == "true" ]]; then
+                COMPONENTS+=",icd=latest"
+              if [[ "$(params.mas-manage-component-nuclear)" == "true" ]]; then
+                COMPONENTS+=",nuclear=latest"
+              if [[ "$(params.mas-manage-component-oilandgas)" == "true" ]]; then
+                COMPONENTS+=",oilandgas=latest"
+              if [[ "$(params.mas-manage-component-oracleadapter)" == "true" ]]; then
+                COMPONENTS+=",oracleadapter=latest"
+              if [[ "$(params.mas-manage-component-sapadapter)" == "true" ]]; then
+                COMPONENTS+=",sapadapter=latest"
+              if [[ "$(params.mas-manage-component-serviceprovider)" == "true" ]]; then
+                COMPONENTS+=",serviceprovider=latest"
+              if [[ "$(params.mas-manage-component-spatial)" == "true" ]]; then
+                COMPONENTS+=",spatial=latest"
+              if [[ "$(params.mas-manage-component-strategize)" == "true" ]]; then
+                COMPONENTS+=",strategize=latest"
+              if [[ "$(params.mas-manage-component-transportation)" == "true" ]]; then
+                COMPONENTS+=",transportation=latest"
+              if [[ "$(params.mas-manage-component-tririga)" == "true" ]]; then
+                COMPONENTS+=",tririga=latest"
+              if [[ "$(params.mas-manage-component-utilities)" == "true" ]]; then
+                COMPONENTS+=",utilities=latest"
+              if [[ "$(params.mas-manage-component-workday)" == "true" ]]; then
+                COMPONENTS+=",workday=latest"
+
+
+              #export MAS_APPWS_COMPONENTS="base=latest,health=latest,spatial=latest,strategize=latest,utilities=latest,transportation=latest,serviceprovider=latest,hse=latest"
+              export MAS_APPWS_COMPONENTS=$COMPONENTS
+
               export MAS_APP_SETTINGS_DEMODATA=$(params.install-demo-data)
 
               export CPD_INSTALL_PLATFORM="true"
