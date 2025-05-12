@@ -1,101 +1,40 @@
-# Techzone Deployer for the Maximo 
+# Notice
 
-This repository contains a Tekton pipelines to deploy Maximo using [mas-ansible](https://ibm-mas.github.io/ansible-devops/).
+This repo will be deprecated in favor of a cli driven pipeline at https://github.com/cloud-native-toolkit/deployer-mas-cli
+
+
+
+# Techzone Deployer for the Maximo Operator
+
+This repository contains a Tekton pipelines to deploy the [Maximo Operator](https://github.com/cloud-native-toolkit/operator-masauto) that packages [mas-ansible](https://ibm-mas.github.io/ansible-devops/).
 
 ## Pre-requisites
 
-### Deployer Cluster
-
 An IBM Technology Zone `deployer` cluster is assumed to be configured with an appropriate Red Hat OpenShift version for the Maximo version you wish to deploy, with appropriate sizing. Refer to [Maximo Product Documentation](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=planning) for more information.
-
-A deployer cluster can be created by installing the Deployer Operator
 
 A `deployer` cluster is configured with the following items:
 
-- ExternalSecrets operator deployed with a ClusterSecretStore configured. 
+- ExternalSecrets operator deployed with a ClusterSecretStore configured. The remote ExternalSecrets secret store must include an IBM Entitlement Key.
 - Techzone Deployer Tekton tasks deployed ([deploy YAML](https://github.com/cloud-native-toolkit/deployer-tekton-tasks/blob/main/argocd.yaml)).
 - OpenShift GitOps configured with [One Touch Provisioning ArgoCD instance](https://github.com/one-touch-provisioning/otp-gitops), and any relevant RBAC rules.
 - OpenShift Pipelines operator deployed.
 - deployer pipelines tasks and cluster tasks
 
-### Entitlement key
-
-If deploying on TechZone the entitlement key is provided from the TechZone Secrets Repo.  If deploying in a non-techzone cluster you will need to provide an entitlement key for the pipelinerun.
-
-Documentation for obtaining an entitlement key here: https://www.ibm.com/docs/en/cloud-paks/1.0?topic=clusters-obtaining-your-entitlement-key
-
-
-### Maximo License
-
-To activate Maximo you will need a valid license key which is a text file that contains software authorizations and entitlements.  This pipeline in order to run automatically will need this file to be base64 encoded and saved in a kubernetes secret.
-
-1. save the license file to a file locally such as license.dat.
-2. Use a tool to base64 encode the file such as "
-
-```
-cat license.dat | base64 > license.dat.b64
-```
-
-3. copy the output into an OpenShift secret in the default namespace
-
-```
-oc create secret generic maximolicense --from-file=licensefile=license.dat.b64 -n default
-```
-
-remember the name of the secret for the pipeline run.  ( in the example above "maximolicense" is the name)
-
 
 ## Pipelines organisation
 
-Maximo is deployed with a Tekton Pipeline that is defined in pipeline.yaml
+Maximo is deployed with a Tekton Pipeline that is defined in maximo-pipeline.yaml
 
-the pipeline runs the MAS DevOps playbooks and can be modified or extended using other roles and playbooks.
 
-Consult the documentation for MAS DevOps [here](https://ibm-mas.github.io/ansible-devops/)
+## Tasks
+
+Currently uses oc client, git clone, and helm-update-from-source from tekton hub
 
 ## Usage
 
-### If using your own cluster
-Run Deployer prep on the cluster.
-link: https://github.com/cloud-native-toolkit/deployer-cluster-prep/blob/main/prepare-cluster.sh
-
-
 ###
-switch to version directory of choice and run these commands
 ```
-oc apply -f pipeline.yaml
-oc create -f pipeline-run.yaml
+oc apply -f maximo-pipeline.yaml
+
+tkn pipeline start mas-core-deploy --pod-template pod-template.yaml -w name=shared-workspace,volumeClaimTemplateFile=workspace-template.yaml
 ```
-
-# Known Issues
-
-## Time to install
-
-In testing we have seen the pipeline take from 2-6 hours to progress from installation of operators to active instances of the software.  please be patient.
-
-The pipeline is fully idempotent and can be restarted as needed.
-
-## DB2 crash loop
-
-known issues around db2 not coming up may cause problems with maximo manage installation:
-* https://github.com/ibm-mas/ansible-devops/issues/1039
-* https://www.ibm.com/docs/en/cloud-paks/cp-data/4.6.x?topic=issues-watson-query#known-issues-dv__install-upgrade__title__1
-
-if the maximo manage activation is not progressing.  check to see if a pod that starts with something like inst1-masdev-manage-maxinst-* exists and view its logs.  If you see messages like "invalid tablespaces", check to see if db2 is healthy.  if db2u etcd pod is unhealthy or crashing, you can delete the pod to restart it.  
-
-at this point you will have to reset the db2 database with this workaround:
-
-Go to terminal c-db2w-shared-db2u-0 in db2u namespace
-
-```
-su -lc '/tmp/setupdb.sh | tee /tmp/setupdb.log' db2inst1
-```
-
-Go to project mas-inst1-manage
-Delete the pod inst1-masdev-manage-maxinst-*
-
-
-
-## TLS certs
-
-the pipeline looks for a lets-encrypt cert previously generated by upstream automation and if found uses this cert for maximo public routes.  This cert may not have all maximo paths enabled by default.  If you encounter a non-trusted certificate you may have to open the path in a separate browser window and accept the cert.
