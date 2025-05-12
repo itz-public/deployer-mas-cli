@@ -62,7 +62,7 @@ spec:
 
     # install MAS Predict, depending on MAS Core, Health, IoT and Monitor, optionally CP4D services
     - name: mas-install-predict
-      value: "true"
+      value: "false"
     - name: cpd-platform-components
       value: "true"
     - name: cpd-install-spss
