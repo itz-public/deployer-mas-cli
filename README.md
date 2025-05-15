@@ -1,4 +1,4 @@
-# Techzone Deployer for the Maximo 
+# Techzone Deployer for the Maximo Application Suite
 
 This repository contains a Tekton pipelines to deploy Maximo using [mas-ansible](https://ibm-mas.github.io/ansible-devops/).
 
@@ -8,15 +8,8 @@ This repository contains a Tekton pipelines to deploy Maximo using [mas-ansible]
 
 An IBM Technology Zone `deployer` cluster is assumed to be configured with an appropriate Red Hat OpenShift version for the Maximo version you wish to deploy, with appropriate sizing. Refer to [Maximo Product Documentation](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=planning) for more information.
 
-A deployer cluster can be created by installing the Deployer Operator
+A deployer cluster can be created by installing the Deployer Operator from TechZone
 
-A `deployer` cluster is configured with the following items:
-
-- ExternalSecrets operator deployed with a ClusterSecretStore configured. 
-- Techzone Deployer Tekton tasks deployed ([deploy YAML](https://github.com/cloud-native-toolkit/deployer-tekton-tasks/blob/main/argocd.yaml)).
-- OpenShift GitOps configured with [One Touch Provisioning ArgoCD instance](https://github.com/one-touch-provisioning/otp-gitops), and any relevant RBAC rules.
-- OpenShift Pipelines operator deployed.
-- deployer pipelines tasks and cluster tasks
 
 ### Entitlement key
 
@@ -55,10 +48,6 @@ Consult the documentation for MAS DevOps [here](https://ibm-mas.github.io/ansibl
 
 ## Usage
 
-### If using your own cluster
-Run Deployer prep on the cluster.
-link: https://github.com/cloud-native-toolkit/deployer-cluster-prep/blob/main/prepare-cluster.sh
-
 
 ###
 switch to version directory of choice and run these commands
@@ -74,26 +63,6 @@ oc create -f pipeline-run.yaml
 In testing we have seen the pipeline take from 2-6 hours to progress from installation of operators to active instances of the software.  please be patient.
 
 The pipeline is fully idempotent and can be restarted as needed.
-
-## DB2 crash loop
-
-known issues around db2 not coming up may cause problems with maximo manage installation:
-* https://github.com/ibm-mas/ansible-devops/issues/1039
-* https://www.ibm.com/docs/en/cloud-paks/cp-data/4.6.x?topic=issues-watson-query#known-issues-dv__install-upgrade__title__1
-
-if the maximo manage activation is not progressing.  check to see if a pod that starts with something like inst1-masdev-manage-maxinst-* exists and view its logs.  If you see messages like "invalid tablespaces", check to see if db2 is healthy.  if db2u etcd pod is unhealthy or crashing, you can delete the pod to restart it.  
-
-at this point you will have to reset the db2 database with this workaround:
-
-Go to terminal c-db2w-shared-db2u-0 in db2u namespace
-
-```
-su -lc '/tmp/setupdb.sh | tee /tmp/setupdb.log' db2inst1
-```
-
-Go to project mas-inst1-manage
-Delete the pod inst1-masdev-manage-maxinst-*
-
 
 
 ## TLS certs

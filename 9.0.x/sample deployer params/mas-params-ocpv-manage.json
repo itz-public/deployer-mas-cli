@@ -5,13 +5,13 @@
             "rwx-storageclass": "ocs-external-storagecluster-cephfs",
             "rwo-storageclass": "ocs-external-storagecluster-cephfs",
             "use-letsencrypt-certs": "true",
-            "mas-catalog-version": "v9-250306-amd64",
+            "mas-catalog-version": "v9-250501-amd64",
             "tlscert-secret": "user-serving-cert-000",
             "tlscert-namespace": "openshift-kube-apiserver",
             "mas-install-core": "true",
             "mas-install-manage": "true",
             "mas-install-demo-data": "true",
-            "mas-cp4d-install-cognos": "true"
+            "mas-appws-components": "base=latest,health=latest,spatial=latest,strategize=latest,utilities=latest,transportation=latest,serviceprovider=latest,hse=latest"
         }
     },
     "certs": {
