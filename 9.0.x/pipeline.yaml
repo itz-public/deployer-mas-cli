@@ -644,49 +644,7 @@ spec:
               export MANAGE_AIO_FLAG=false
               export MAS_APP_ID=manage
 
-              COMPONENTS="base=latest"
-
-              if [[ "$(params.mas-manage-component-acm)" == "true" ]]; then
-                COMPONENTS+=",acm=latest"
-              if [[ "$(params.mas-manage-component-aviation)" == "true" ]]; then
-                COMPONENTS+=",aviation=latest"
-              if [[ "$(params.mas-manage-component-civil)" == "true" ]]; then
-                COMPONENTS+=",civil=latest"
-              if [[ "$(params.mas-manage-component-envizi)" == "true" ]]; then
-                COMPONENTS+=",envizi=latest"
-              if [[ "$(params.mas-manage-component-health)" == "true" ]]; then
-                COMPONENTS+=",health=latest"
-              if [[ "$(params.mas-manage-component-hse)" == "true" ]]; then
-                COMPONENTS+=",hse=latest"
-              if [[ "$(params.mas-manage-component-icd)" == "true" ]]; then
-                COMPONENTS+=",icd=latest"
-              if [[ "$(params.mas-manage-component-nuclear)" == "true" ]]; then
-                COMPONENTS+=",nuclear=latest"
-              if [[ "$(params.mas-manage-component-oilandgas)" == "true" ]]; then
-                COMPONENTS+=",oilandgas=latest"
-              if [[ "$(params.mas-manage-component-oracleadapter)" == "true" ]]; then
-                COMPONENTS+=",oracleadapter=latest"
-              if [[ "$(params.mas-manage-component-sapadapter)" == "true" ]]; then
-                COMPONENTS+=",sapadapter=latest"
-              if [[ "$(params.mas-manage-component-serviceprovider)" == "true" ]]; then
-                COMPONENTS+=",serviceprovider=latest"
-              if [[ "$(params.mas-manage-component-spatial)" == "true" ]]; then
-                COMPONENTS+=",spatial=latest"
-              if [[ "$(params.mas-manage-component-strategize)" == "true" ]]; then
-                COMPONENTS+=",strategize=latest"
-              if [[ "$(params.mas-manage-component-transportation)" == "true" ]]; then
-                COMPONENTS+=",transportation=latest"
-              if [[ "$(params.mas-manage-component-tririga)" == "true" ]]; then
-                COMPONENTS+=",tririga=latest"
-              if [[ "$(params.mas-manage-component-utilities)" == "true" ]]; then
-                COMPONENTS+=",utilities=latest"
-              if [[ "$(params.mas-manage-component-workday)" == "true" ]]; then
-                COMPONENTS+=",workday=latest"
-
-
-              #export MAS_APPWS_COMPONENTS="$(params.mas-appws-components)"
-
-              export MAS_APPWS_COMPONENTS=$COMPONENTS
+              export MAS_APPWS_COMPONENTS="$(params.mas-appws-components)"
 
               export MAS_APP_SETTINGS_DEMODATA=$(params.install-demo-data)
 
