@@ -38,35 +38,35 @@ spec:
 
     # install MAS Manage, depending on MAS Core, optionally CP4D/DB2
     - name: mas-install-manage
-      value: "true"
+      value: "false"
     - name: mas-install-demo-data
-      value: "true"
+      value: "false"
     - name: mas-cp4d-install-cognos
       value: "false"
 
     # install MAS Optimizer
     - name: mas-install-optimizer
-      value: "true"
+      value: "false"
 
     # install MAS Visual Inspection
     - name: mas-install-visualinspection
       value: "false"
 
     - name: run-kafka-fix
-      value: "true"
+      value: "false"
     # install MAS IoT and Monitor, depending on MAS Core
     - name: mas-install-iot
-      value: "true"
+      value: "false"
     - name: mas-install-monitor
-      value: "true"
+      value: "false"
 
     # install MAS Predict, depending on MAS Core, Health, IoT and Monitor, optionally CP4D services
     - name: mas-install-predict
       value: "false"
     - name: cpd-platform-components
-      value: "true"
+      value: "false"
     - name: cpd-install-spss
-      value: "true"
+      value: "false"
     - name: cpd-wsl-projectname
       value: "maspredictproject"
     - name: cpd-wml-url

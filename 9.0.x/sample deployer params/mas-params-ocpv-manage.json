@@ -11,7 +11,6 @@
             "mas-install-core": "true",
             "mas-install-manage": "true",
             "mas-install-demo-data": "true",
-            "mas-cp4d-install-cognos": "true",
             "mas-appws-components": "base=latest,health=latest,spatial=latest,strategize=latest,utilities=latest,transportation=latest,serviceprovider=latest,hse=latest"
         }
     },
