@@ -684,7 +684,8 @@ spec:
                 COMPONENTS+=",workday=latest"
 
 
-              #export MAS_APPWS_COMPONENTS="base=latest,health=latest,spatial=latest,strategize=latest,utilities=latest,transportation=latest,serviceprovider=latest,hse=latest"
+              #export MAS_APPWS_COMPONENTS="$(params.mas-appws-components)"
+
               export MAS_APPWS_COMPONENTS=$COMPONENTS
 
               export MAS_APP_SETTINGS_DEMODATA=$(params.install-demo-data)
