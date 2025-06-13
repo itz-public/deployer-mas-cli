@@ -721,6 +721,7 @@ spec:
             image: quay.io/ibmmas/cli:latest
             script: |
               #!/usr/bin/env bash
+
               NAMESPACE="strimzi"
               SUBSCRIPTION_NAME="strimzi-kafka-operator"
               CSV_NAME="strimzi-cluster-operator.v0.46.0"
@@ -728,46 +729,46 @@ spec:
               MAX_DURATION_SECONDS=$((40 * 60))  # 40 minutes
               INTERVAL_SECONDS=5
               ELAPSED_SECONDS=0
-
+              
               echo "Starting subscription monitor for '$SUBSCRIPTION_NAME' in namespace '$NAMESPACE' (timeout: 40 minutes)..."
-
+              
               while [ $ELAPSED_SECONDS -lt $MAX_DURATION_SECONDS ]; do
                 if oc get subscriptions.operators.coreos.com "$SUBSCRIPTION_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
                   CURRENT_CHANNEL=$(oc get subscriptions.operators.coreos.com "$SUBSCRIPTION_NAME" -n "$NAMESPACE" -o jsonpath="{.spec.channel}")
-                  
+                 
                   echo "[$(date +'%H:%M:%S')] Subscription found. Current channel: $CURRENT_CHANNEL"
-                  
+                 
                   if [ "$CURRENT_CHANNEL" == "stable" ]; then
                     echo "Subscription is using 'stable' channel. Deleting subscription and operator..."
-
+              
                     # Delete the Subscription
                     oc delete subscriptions.operators.coreos.com "$SUBSCRIPTION_NAME" -n "$NAMESPACE"
                     echo "Waiting 5 minutes for the CSV."
                     sleep 3m
                     # Delete the Operator CSV (find the installed CSV for this operator)
-                    
+                   
                     if [ -n "$CSV_NAME" ]; then
                       echo "Deleting ClusterServiceVersion '$CSV_NAME'..."
                       oc delete csv "$CSV_NAME" -n "$NAMESPACE"
                     else
                       echo "No ClusterServiceVersion found for operator '$SUBSCRIPTION_NAME'."
                     fi
-
+              
                     # Wait until both are deleted
                     echo "Waiting for subscription deletion..."
                     while oc get subscriptions.operators.coreos.com "$SUBSCRIPTION_NAME" -n "$NAMESPACE" > /dev/null 2>&1; do
                       sleep 2
                     done
-
+              
                     if [ -n "$CSV_NAME" ]; then
                       echo "Waiting for operator (CSV) deletion..."
                       while oc get csv "$CSV_NAME" -n "$NAMESPACE" > /dev/null 2>&1; do
                         sleep 2
                       done
                     fi
-
+              
                     echo "Subscription and Operator deleted."
-
+              
                     # Recreate the Subscription with target channel
                     echo "Recreating subscription with channel '$TARGET_CHANNEL'..."
                     cat <<EOF | oc apply -f -
@@ -783,20 +784,22 @@ spec:
                                   source: community-operators
                                   sourceNamespace: openshift-marketplace
               EOF
-
+              
                     echo "Subscription recreated pointing to channel '$TARGET_CHANNEL'. Monitoring will stop."
                     exit 0
                   else
                     echo "Subscription is not using 'stable' (currently '$CURRENT_CHANNEL'). No action needed."
+                    exit 0 # Exit successfully as no action is needed
+              
                   fi
                 else
                   echo "[$(date +'%H:%M:%S')] Subscription not found yet. Waiting for creation..."
                 fi
-
+              
                 sleep $INTERVAL_SECONDS
                 ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
               done
-
+              
               echo "Timeout reached (40 minutes). Subscription monitor stopped without needing intervention."
               exit 1
 
