@@ -24,9 +24,9 @@ spec:
     - name: license-file-secret-name
       value: "false"
     - name: rwx-storageclass
-      value: ocs-external-storagecluster-cephfs
+      value: ocs-storagecluster-cephfs
     - name: rwo-storageclass
-      value: ocs-external-storagecluster-cephfs
+      value: ocs-storagecluster-cephfs
     - name: mas-install-core
       value: "true"
     - name: mas-install-manage
