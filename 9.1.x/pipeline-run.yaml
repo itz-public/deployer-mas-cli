@@ -77,7 +77,7 @@ spec:
     - name: ws
       volumeClaimTemplate:
         spec:
-          storageClassName: ocs-external-storagecluster-cephfs
+          storageClassName: $(params.rwx-storageclass)
           accessModes:
             - ReadWriteMany
           resources:
