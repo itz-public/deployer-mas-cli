@@ -7,6 +7,7 @@ metadata:
 spec:
   workspaces:
     - name: ws
+    - name: manage-ws
   params:
     - name: mas-instance-id
       type: string
@@ -475,7 +476,66 @@ spec:
               #cat ansible-devops/roles/suite_certs/defaults/main.yml
 
               ansible-playbook ibm.mas_devops.oneclick_core
+    - name: copy-files-to-workspaces
+      runAfter:
+        - install-mas-core
+      workspaces:
+        - name: ws
+          workspace: ws
+        - name: manage-ws
+          workspace: manage-ws
+      params:
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-instance-id
+        steps:
+          - name: run-mas-cli-test
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+              SOURCE_PATH="$(workspaces.ws.path)"
+              DEST_PATH="$(workspaces.manage-ws.path)"
 
+              echo "--- Starting Workspace Copy ---"
+              echo "Source:      ${SOURCE_PATH}"
+              echo "Destination: ${DEST_PATH}"
+              echo ""
+
+              echo "1. Validating source directory..."
+
+              # Check if the source directory exists and is not empty.
+              # If it doesn't exist or is empty, there's nothing to do.
+              if [ ! -d "${SOURCE_PATH}" ] || [ -z "$(ls -A "${SOURCE_PATH}")" ]; then
+                echo "Source directory is missing or empty. No files to copy."
+                # This exits successfully because no action is a valid outcome.
+                # If an empty source should be an error, change `exit 0` to `exit 1`.
+                exit 0
+              fi
+              echo "   Source is valid."
+              echo ""
+
+              echo "2. Copying files..."
+
+              # Use `cp -a` (archive mode) to preserve permissions, ownership, and timestamps.
+              # It's generally better than `cp -r` for build/CI workspaces.
+              # The `/." at the end of SOURCE_PATH copies the *contents* of the directory,
+              # not the directory itself, into the destination.
+              cp -a "${SOURCE_PATH}/." "${DEST_PATH}/"
+
+              # --- 3. Validate Result ---
+              # Check the exit code (`$?`) of the `cp` command. 0 means success.
+              if [ $? -eq 0 ]; then
+                echo "Success: Files and directories copied successfully."
+              else
+                echo "Failure: The copy operation failed."
+                exit 1
+              fi
+
+              echo "--- Workspace Copy Finished ---"
     - name: install-manage
       when:
         - input: "$(params.mas-install-manage)"
@@ -484,9 +544,11 @@ spec:
       retries: 3
       timeout: "12h"
       runAfter:
-        - install-mas-core
+        # - install-mas-core
+        - copy-files-to-workspaces
       workspaces:
         - name: ws
+          workspace: manage-ws
       params:
         - name: mas-catalog-version
           value: "$(params.mas-catalog-version)"
@@ -701,9 +763,12 @@ spec:
       retries: 3
       timeout: "12h"
       runAfter:
-        - install-mas-core
+        # - install-mas-core
+        - copy-files-to-workspaces
+
       workspaces:
         - name: ws
+          workspace: ws
       params:
         - name: mas-catalog-version
           value: "$(params.mas-catalog-version)"
