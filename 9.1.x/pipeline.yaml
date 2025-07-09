@@ -7,6 +7,8 @@ metadata:
 spec:
   workspaces:
     - name: ws
+    - name: manage-ws
+    - name: iot-ws
   params:
     - name: mas-instance-id
       type: string
@@ -390,6 +392,8 @@ spec:
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/predict/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/aibroker/
 
+              cp $(workspaces.ws.path)/* $(workspaces.manage-ws.path)
+              cp $(workspaces.ws.path)/* $(workspaces.iot-ws.path)
               exit
     - name: install-mas-core
       when:
@@ -487,6 +491,7 @@ spec:
         - install-mas-core
       workspaces:
         - name: ws
+          workspace: manage-ws
       params:
         - name: mas-catalog-version
           value: "$(params.mas-catalog-version)"
@@ -704,6 +709,7 @@ spec:
         - install-mas-core
       workspaces:
         - name: ws
+          workspace: iot-ws
       params:
         - name: mas-catalog-version
           value: "$(params.mas-catalog-version)"

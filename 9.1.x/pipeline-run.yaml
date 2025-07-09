@@ -82,6 +82,22 @@ spec:
           resources:
             requests:
               storage: 1Gi
+    - name: iot-ws
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 1Gi
+    - name: manage-ws
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 1Gi
   timeouts:
     pipeline: "0"
     tasks: "24h"
