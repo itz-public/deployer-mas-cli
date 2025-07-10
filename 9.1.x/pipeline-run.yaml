@@ -45,6 +45,8 @@ spec:
       value: "false"
     - name: mas-install-predict
       value: "false"
+    - name: mas-install-mref
+      value: "false"
     - name: cpd-platform-components
       value: "false"
     - name: cpd-install-spss

@@ -52,6 +52,10 @@ spec:
       type: string
       description: "install MAS Predict"
       default: "false"
+    - name: mas-install-mref
+      type: string
+      description: "install MAS MREF"
+      default: "false"
     - name: install-demo-data
       type: string
       description: "install demo data, adds 2+ hours to install time"
@@ -381,6 +385,7 @@ spec:
               mkdir -p $(workspaces.ws.path)/masconfig/certs/visualinspection/
               mkdir -p $(workspaces.ws.path)/masconfig/certs/predict/
               mkdir -p $(workspaces.ws.path)/masconfig/certs/aibroker/
+              mkdir -p $(workspaces.ws.path)/masconfig/certs/facilities/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/iot/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/manage/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/monitor/
@@ -390,6 +395,7 @@ spec:
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/visualinspection/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/predict/
               cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/aibroker/
+              cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/facilities/
 
               exit
     - name: install-mas-core
@@ -472,7 +478,7 @@ spec:
 
               #check ai broker public cert
               #cat ansible-devops/roles/suite_certs/defaults/main.yml
-              wget -qO - "https://raw.githubusercontent.com/zxue/ansible-devops/master/ibm/mas_devops/roles/suite_certs/defaults/main.yml" > ansible-devops/roles/suite_certs/defaults/main.yml
+              # wget -qO - "https://raw.githubusercontent.com/zxue/ansible-devops/master/ibm/mas_devops/roles/suite_certs/defaults/main.yml" > ansible-devops/roles/suite_certs/defaults/main.yml
               #cat ansible-devops/roles/suite_certs/defaults/main.yml
 
               ansible-playbook ibm.mas_devops.oneclick_core
@@ -622,7 +628,7 @@ spec:
 
               export MAS_APP_SETTINGS_PERSISTENT_VOLUMES_FLAG=true
               export MAS_APP_SETTINGS_BASE_LANG=EN
-              export MAS_APP_SETTINGS_SECONDARY_LANGS='DE'
+              # export MAS_APP_SETTINGS_SECONDARY_LANGS='DE'
               export MAS_APP_SETTINGS_SERVER_BUNDLES_SIZE=jms
               export MAS_MANAGE_ATTACHMENTS_PROVIDER=filestorage
               export MAS_APP_SETTINGS_ATTACHMENTS_MOUNT_PATH=/DOCLINKS
@@ -980,7 +986,6 @@ spec:
           value: "$(params.mas_airbroker_watsonxai_project_id)"
         - name: mas_aibroker_channel
           value: "$(params.mas_aibroker_channel)"
-
       taskSpec:
         workspaces:
           - name: ws
@@ -996,7 +1001,6 @@ spec:
           - name: mas_airbroker_watsonxai_url
           - name: mas_airbroker_watsonxai_project_id
           - name: mas_aibroker_channel
-
         steps:
           - name: run-mas-cli
             image: quay.io/ibmmas/cli:latest
@@ -1070,3 +1074,56 @@ spec:
               export MAS_AIBROKER_DB_SECRET_VALUE="mariadb"
 
               ansible-playbook ibm.mas_devops.oneclick_add_aibroker
+    - name: install-mref
+      when:
+        - input: "$(params.mas-install-mref)"
+          operator: in
+          values: ["true"]
+      retries: 3
+      timeout: "12h"
+      runAfter:
+        - install-mas-core
+      workspaces:
+        - name: ws
+          workspace: ws
+      params:
+        - name: mas-catalog-version
+          value: "$(params.mas-catalog-version)"
+        - name: mas-channel
+          value: "$(params.mas-channel)"
+        - name: mas-instance-id
+          value: "$(params.mas-instance-id)"
+        - name: mas-workspace-id
+          value: "$(params.mas-workspace-id)"
+        - name: rwo-storageclass
+          value: "$(params.rwo-storageclass)"
+        - name: rwx-storageclass
+          value: "$(params.rwx-storageclass)"          
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: mas-catalog-version
+          - name: mas-channel
+          - name: mas-instance-id
+          - name: mas-workspace-id
+          - name: rwo-storageclass
+          - name: rwx-storageclass
+        steps:
+          - name: run-mas-cli
+            image: quay.io/ibmmas/cli:latest
+            script: |
+              #!/usr/bin/env bash
+
+              export MAS_INSTANCE_ID=$(params.mas-instance-id)
+              export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_SCOPE=system
+              export MAS_APPWS_BINDINGS_JDBC=system
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export MAS_CHANNEL=$(params.mas-channel)
+
+
+              ansible-playbook ibm.mas_devops.oneclick_add_facilities
