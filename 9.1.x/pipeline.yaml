@@ -1006,74 +1006,75 @@ spec:
             image: quay.io/ibmmas/cli:latest
             script: |
               #!/usr/bin/env bash
-
-              mkdir -p $(workspaces.ws.path)/masconfig/minio/
-              mkdir -p $(workspaces.ws.path)/masconfig/mariadb/
-
-              # Update storage class "ocs-storagecluster-cephfs" in mariadb-pvc.yml
-              # Update namespace "mas-inst1-aibroker" in maridb-np.yml 
-
-              # download files form github repo or other location
-              export MINIO_FOLDER="https://raw.githubusercontent.com/zxue/deploy-maximo-aibroker/main/minio/"
-              export MARIADB_FOLDER="https://raw.githubusercontent.com/zxue/deploy-maximo-aibroker/main/mariadb/"
-
-              wget -qO - "$MINIO_FOLDER"kustomization.yaml > $(workspaces.ws.path)/masconfig/minio/kustomization.yaml
-              wget -qO - "$MINIO_FOLDER"minio.yaml > $(workspaces.ws.path)/masconfig/minio/minio.yaml
-              wget -qO - "$MINIO_FOLDER"pvc.yaml > $(workspaces.ws.path)/masconfig/minio/pvc.yaml
-
-              wget -qO - "$MARIADB_FOLDER"mariadb-deploy.sh > $(workspaces.ws.path)/masconfig/mariadb/mariadb-deploy.sh
-              wget -qO - "$MARIADB_FOLDER"mariadb-deployment.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-deployment.yml
-              wget -qO - "$MARIADB_FOLDER"mariadb-np.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-np.yml
-              wget -qO - "$MARIADB_FOLDER"mariadb-ns.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-ns.yml
-              wget -qO - "$MARIADB_FOLDER"mariadb-pvc.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-pvc.yml
-              wget -qO - "$MARIADB_FOLDER"mariadb-sa.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-sa.yml
-              wget -qO - "$MARIADB_FOLDER"mariadb-secret.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-secret.yml
-              wget -qO - "$MARIADB_FOLDER"mariadb-service.yml > $(workspaces.ws.path)/masconfig/mariadb/mariadb-service.yml
-
-              # run oc command lines to create minio storage and mariadb
-              cd  $(workspaces.ws.path)/masconfig
-              chmod 777 $(workspaces.ws.path)/masconfig/mariadb/mariadb-deploy.sh
-              oc apply -k minio
-              ./mariadb/mariadb-deploy.sh
-
-              # ARTIFACTORY credentials to access dev images. (This section will be optional once the images are publicly available.)
-              export ARTIFACTORY_USERNAME=$(params.artifactory_username)
-              export ARTIFACTORY_TOKEN=$(params.artifactory_token)
-              export MAS_ICR_CP="docker-na-public.artifactory.swg-devops.com/wiotp-docker-local"
-              export MAS_ICR_CPOPEN="docker-na-public.artifactory.swg-devops.com/wiotp-docker-local/cpopen"
-
-              #MAS
+              # vars
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
-              export MAS_ENTITLEMENT_USERNAME=$(params.uds-email)
+              export MAS_APP_CHANNEL=$(params.mas-channel)
+              export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
+              export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
               export MAS_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
+              export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
+
+              # Install deps 
+              export INSTALL_DB2="false"
+              export INSTALL_MINIO="true"
+              export INSTALL_MARIADB="true"
+              export INSTALL_MONGO="false"
+              export INSTALL_SLS="false"
+              export INSTALL_DRO="false"
+
+              # S3 in main CR
+              export MAS_AIBROKER_S3_BUCKET_PREFIX="s3"
+              export MAS_AIBROKER_S3_REGION="" #empty if installing minio
+              export MAS_AIBROKER_S3_ENDPOINT_URL="http://minio-service.minio.svc.cluster.local:9000"
+
+              # S3 for tenant
+              export MAS_AIBROKER_TENANT_S3_REGION="" #empty if installing minio
+              export MAS_AIBROKER_TENANT_S3_ENDPOINT_URL="http://minio-service.minio.svc.cluster.local:9000"
+              export MAS_AIBROKER_TENANT_S3_BUCKET_PREFIX="s3"
+              export MAS_AIBROKER_TENANT_S3_ACCESS_KEY="minio"
+              export MAS_AIBROKER_TENANT_S3_SECRET_KEY="minio123"
+
+              # RSL
+              #export RSL_URL="http://sandbox43-1.fyre.ibm.com:3001/api/v3/vector/query"
+              #export RSL_ORG_ID="xxxx-xxxx-xxx-984xxxx-f2960a07531xxxxx"
+              #export RSL_TOKEN="Bearer eyxxxx"
 
               # MINIO
-              export MAS_AIBROKER_STORAGE_ACCESSKEY="minio123"
-              export MAS_AIBROKER_STORAGE_SECRETKEY="minio123"
-              export MAS_AIBROKER_STORAGE_SSL="false"
-              export MAS_AIBROKER_STORAGE_PROVIDER="minio"
-              #export MAS_AIBROKER_STORAGE_REGION="storage provider region"  
-              export MAS_AIBROKER_STORAGE_PORT="9000"
+              export MINIO_ROOT_PASSWORD="minio123" # this is in mariadb role
+              export MAS_AIBROKER_STORAGE_ACCESSKEY="minio"
+              export MAS_AIBROKER_STORAGE_SECRETKEY=${MINIO_ROOT_PASSWORD}
               export MAS_AIBROKER_STORAGE_HOST="minio-service.minio.svc.cluster.local"
+              export MAS_AIBROKER_STORAGE_SSL="false" # dont change this (for now)
+              export MAS_AIBROKER_STORAGE_PROVIDER="minio"
+              export MAS_AIBROKER_STORAGE_PORT="9000"
+              export MAS_AIBROKER_STORAGE_REGION=""
               export MAS_AIBROKER_STORAGE_PIPELINES_BUCKET="km-pipelines"
               export MAS_AIBROKER_STORAGE_TENANTS_BUCKET="km-tenants"
               export MAS_AIBROKER_STORAGE_TEMPLATES_BUCKET="km-templates"
 
-              # WATSONX AI
-              export MAS_AIBROKER_WATSONXAI_APIKEY=$(params.mas_airbroker_watsonxai_apikey)
-              export MAS_AIBROKER_WATSONXAI_URL=$(params.mas_airbroker_watsonxai_url)
-              export MAS_AIBROKER_WATSONXAI_PROJECT_ID=$(params.mas_airbroker_watsonxai_project_id)
-              export MAS_AIBROKER_CHANNEL=$(params.mas_aibroker_channel)
-
-              # database
+              # MARIADB
+              export MARIADB_PASSWORD="mariadb"
               export MAS_AIBROKER_DB_HOST="mariadb-instance.mariadb.svc.cluster.local"
               export MAS_AIBROKER_DB_PORT="3306"
               export MAS_AIBROKER_DB_USER="mariadb"
-              export MAS_AIBROKER_DB_DATABASE="kmpipeline"
-              export MAS_AIBROKER_DB_SECRET_NAME="ds-pipeline-db-instance"
-              export MAS_AIBROKER_DB_SECRET_VALUE="mariadb"
+              export MAS_AIBROKER_DB_DATABASE="kmpipeline" # we can set as default
+              export MAS_AIBROKER_DB_SECRET_NAME="ds-pipeline-db-instance"  # we can set as default
+              export MAS_AIBROKER_DB_SECRET_VALUE=${MARIADB_PASSWORD}
 
-              ansible-playbook ibm.mas_devops.oneclick_add_aibroker
+              # WATSONX AI
+              export MAS_AIBROKER_WATSONXAI_APIKEY="MmLqNialQ4ajWglbDDHh4NnzMnTgIQvEUkPXjS4yPEq-"
+              export MAS_AIBROKER_WATSONXAI_URL="https://us-south.ml.cloud.ibm.com"
+              export MAS_AIBROKER_WATSONXAI_PROJECT_ID="531bc621-cdc9-48d4-b3d2-10e56d835e4b"
+
+              # SAAS
+              export MAS_AIBROKER_SUBSCRIPTION_ID="01"
+              export MAS_AIBROKER_DRO_TENANT_ID="01"
+              export MAS_AIBROKER_TENANT_ENTITLEMENT_START_DATE="2025-01-01"
+              export MAS_AIBROKER_TENANT_ENTITLEMENT_END_DATE="2060-01-01"
+              export MAS_AIBROKER_SAAS="false"
+
+              ansible-playbook ibm.mas_devops.oneclick_add_aibroker.yml
+
     - name: install-mref
       when:
         - input: "$(params.mas-install-mref)"
@@ -1120,8 +1121,6 @@ spec:
               export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
               export IBM_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
               export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
-              export MAS_CONFIG_SCOPE=system
-              export MAS_APPWS_BINDINGS_JDBC=system
               export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
               export MAS_APP_CHANNEL=$(params.mas-channel)
 
