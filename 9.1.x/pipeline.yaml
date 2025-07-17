@@ -621,10 +621,7 @@ spec:
               export DB2_TEMP_STORAGE_CLASS=$(params.rwx-storageclass)
               export DB2_TEMP_STORAGE_SIZE=50Gi
               export DB2_TEMP_STORAGE_ACCESSMODE=ReadWriteOnce
-              #export DB2_CPU_REQUESTS=6000m
-              #export DB2_CPU_LIMITS=10000m
-              #export DB2_MEMORY_REQUESTS=10Gi
-              #export DB2_MEMORY_LIMITS=20Gi
+              export DB2_DATABASE_DB_CONFIG="APPLHEAPSZ=16384 AUTOMATIC"
 
               export MAS_APP_SETTINGS_PERSISTENT_VOLUMES_FLAG=true
               export MAS_APP_SETTINGS_BASE_LANG=EN
@@ -810,7 +807,7 @@ spec:
               export MAS_APPWS_BINDINGS_JDBC=system
               export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
               export MAS_APP_CHANNEL=$(params.mas-channel)
-              export DB2_INSTANCE_NAME="db2w-shared"
+              export DB2_INSTANCE_NAME="db2wh-shared"
 
               export MAS_APP_SETTINGS_IOT_FPL_PVC_STORAGE_CLASS=$(params.rwo-storageclass)
 
@@ -1015,7 +1012,9 @@ spec:
               export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
 
               # Install deps 
-              export INSTALL_DB2="false"
+              export INSTALL_DB2="true"
+              export DB2_INSTANCE_NAME="db2wh-aibroker"
+              export MAS_CONFIG_SCOPE="wsapp"
               export INSTALL_MINIO="true"
               export INSTALL_MARIADB="true"
               export INSTALL_MONGO="false"
