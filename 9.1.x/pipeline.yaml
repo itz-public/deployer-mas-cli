@@ -1122,6 +1122,6 @@ spec:
               export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
               export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
               export MAS_APP_CHANNEL=$(params.mas-channel)
-
+              export MAS_APP_ID=facilities
 
               ansible-playbook ibm.mas_devops.oneclick_add_facilities
