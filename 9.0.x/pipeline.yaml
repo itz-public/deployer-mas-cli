@@ -398,7 +398,7 @@ spec:
           - name: mas-install-core
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:latest
+            image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
               # extract license id from license.dat
@@ -482,7 +482,7 @@ spec:
           - name: mas-appws-components
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:latest
+            image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
@@ -569,7 +569,7 @@ spec:
           - name: mas-channel
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:latest
+            image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
@@ -629,7 +629,7 @@ spec:
           - name: uds-lastname
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:latest
+            image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
@@ -684,7 +684,7 @@ spec:
           - name: rwo-storageclass
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:latest
+            image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
 
@@ -718,7 +718,7 @@ spec:
           - name: ws
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:latest
+            image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
 
@@ -833,7 +833,7 @@ spec:
           - name: mas-channel
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:latest
+            image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
@@ -902,7 +902,7 @@ spec:
           - name: cpd-admin-password
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:latest
+            image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
               
@@ -993,7 +993,7 @@ spec:
 
         steps:
           - name: run-mas-cli
-            image: quay.io/ibmmas/cli:latest
+            image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
 
