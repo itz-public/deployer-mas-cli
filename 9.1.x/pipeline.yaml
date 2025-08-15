@@ -579,6 +579,8 @@ spec:
           value: "$(params.rwo-storageclass)"
         - name: mas-appws-components
           value: "$(params.mas-appws-components)"
+        - name: db2-data-storageclass
+          value: "$(params.db2-data-storageclass)"
       taskSpec:
         workspaces:
           - name: ws
@@ -593,6 +595,7 @@ spec:
           - name: rwx-storageclass
           - name: rwo-storageclass
           - name: mas-appws-components
+          - name: db2-data-storageclass
         steps:
           - name: run-mas-cli
             image: quay.io/ibmmas/cli:14.0.0
