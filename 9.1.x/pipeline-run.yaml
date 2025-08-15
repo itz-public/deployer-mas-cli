@@ -27,6 +27,8 @@ spec:
       value: ocs-storagecluster-cephfs
     - name: rwo-storageclass
       value: ocs-storagecluster-cephfs
+    - name: db2-data-storageclass
+      value: ocs-storagecluster-ceph-rbd
     - name: mas-install-core
       value: "true"
     - name: mas-install-manage
