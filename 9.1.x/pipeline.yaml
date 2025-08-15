@@ -97,6 +97,9 @@ spec:
       description: "desired RWO storageclass"
       type: string
       default: ocs-storagecluster-cephfs
+    - name: db2-data-storageclass
+      description: "DB2 requires block storage  that is low latency"
+      default: ocs-storagecluster-ceph-rbd
     - name: "mas-catalog-version"
       description: "Maximo operator catalog version. Check https://ibm-mas.github.io/cli/catalogs/"
       type: string
@@ -143,9 +146,9 @@ spec:
       type: string
       default: "https://us-south.ml.cloud.ibm.com"
     - name: mas_airbroker_watsonxai_project_id
-      type: string    
+      type: string
     - name: mas_aibroker_channel
-      type: string 
+      type: string
       default: "9.1.x"
 
   finally:
@@ -569,7 +572,7 @@ spec:
         - name: install-demo-data
           value: "$(params.install-demo-data)"
         - name: mas-cp4d-install-cognos
-          value: "$(params.mas-cp4d-install-cognos)"        
+          value: "$(params.mas-cp4d-install-cognos)"
         - name: rwx-storageclass
           value: "$(params.rwx-storageclass)"
         - name: rwo-storageclass
@@ -604,7 +607,7 @@ spec:
               export MAS_APPWS_BINDINGS_JDBC=workspace-application
               export MAS_CATALOG_VERSION=$(params.mas-catalog-version)
               export MAS_APP_CHANNEL=$(params.mas-channel)
-              
+
               export DB2_INSTANCE_NAME=db2wh-manage
               export DB2_ENTITLEMENT_KEY=$(cat $(workspaces.ws.path)/ek.dat)
               export DB2_DBNAME=BLUDB
@@ -612,7 +615,7 @@ spec:
               export DB2_META_STORAGE_CLASS=$(params.rwx-storageclass)
               export DB2_META_STORAGE_SIZE=100Gi
               export DB2_META_STORAGE_ACCESSMODE=ReadWriteMany
-              export DB2_DATA_STORAGE_CLASS=$(params.rwx-storageclass)
+              export DB2_DATA_STORAGE_CLASS=$(params.db2-data-storageclass)
               export DB2_DATA_STORAGE_SIZE=100Gi
               export DB2_DATA_STORAGE_ACCESSMODE=ReadWriteOnce
               export DB2_BACKUP_STORAGE_CLASS=$(params.rwx-storageclass)
@@ -710,7 +713,7 @@ spec:
         - name: mas-instance-id
           value: "$(params.mas-instance-id)"
         - name: mas-workspace-id
-          value: "$(params.mas-workspace-id)"    
+          value: "$(params.mas-workspace-id)"
         - name: rwx-storageclass
           value: "$(params.rwx-storageclass)"
         - name: rwo-storageclass
@@ -753,7 +756,7 @@ spec:
               export DRO_CONTACT_FIRSTNAME=$(params.uds-firstname)
               export DRO_CONTACT_LASTNAME=$(params.uds-lastname)
               export DRO_NAMESPACE=ibm-dro
-              
+
               export GPU_DRIVER_VERSION=565.57.01
 
               ansible-playbook ibm.mas_devops.oneclick_add_visualinspection
@@ -914,7 +917,7 @@ spec:
             image: quay.io/ibmmas/cli:14.0.0
             script: |
               #!/usr/bin/env bash
-              
+
               export MAS_INSTANCE_ID=$(params.mas-instance-id)
               export MAS_WORKSPACE_ID=$(params.mas-workspace-id)
               export MAS_CONFIG_DIR=$(workspaces.ws.path)/masconfig
@@ -935,11 +938,11 @@ spec:
               export CPD_WSL_PROJECT_ID=$(params.cpd-wsl-projectname)
               export CPD_WML_INSTANCE_ID="openshift"
               export WML_VERSION=$(params.mas-cp4d-version)
-              
+
               # use internal cp4d and services in the OpenShift cluster
               if [ $(params.cpd-platform-services) == "true" ]; then
                 export CPD_WML_URL="https://$(oc get ZenService "lite-cr"  -o jsonpath="{.status.url}{'\n'}" -n ibm-cpd)"
-              
+
               # Use external cp4d and services
               else
                 export CPD_WML_URL=$(params.cpd-wml-url)
@@ -1098,7 +1101,7 @@ spec:
         - name: rwo-storageclass
           value: "$(params.rwo-storageclass)"
         - name: rwx-storageclass
-          value: "$(params.rwx-storageclass)"          
+          value: "$(params.rwx-storageclass)"
       taskSpec:
         workspaces:
           - name: ws
