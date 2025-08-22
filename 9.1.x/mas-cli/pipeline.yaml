@@ -1,0 +1,384 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: install-maximo-app-suite-9.1.x
+  namespace: default
+spec:
+  workspaces:
+    - name: ws
+  params:
+    - name: mas-catalog-version
+      type: string
+      default: "v9-250731-amd64"
+    - name: mas-channel
+      type: string
+      default: "9.1.x"
+    - name: mas-instance-id
+      type: string
+      default: "mas1"
+    - name: mas-workspace-id
+      type: string
+      default: "ws1"
+    - name: mas-workspace-name
+      type: string
+      default: "workspace"
+    - name: uds-email
+      type: string
+      default: "john@email.com"
+    - name: uds-firstname
+      type: string
+      default: "john"
+    - name: uds-lastname
+      type: string
+      default: "barney"
+    - name: storage-rwo
+      type: string
+      default: "ocs-external-storagecluster-ceph-rbd"
+    - name: storage-rwx
+      type: string
+      default: "ocs-external-storagecluster-cephfs"
+    - name: storage-pipeline
+      type: string
+      default: "ocs-external-storagecluster-cephfs"
+    - name: storage-accessmode
+      type: string
+      default: "ReadWriteMany"
+
+    # Additional params to support install-mas task
+    - name: license-file
+      type: string
+      default: "license.dat"
+    - name: dro-namespace
+      type: string
+      default: "redhat-marketplace"
+    - name: mongodb-namespace
+      type: string
+      default: "mongoce"
+
+    # Feature flags
+    - name: iot-channel
+      type: string
+      default: ""
+
+    - name: monitor-channel
+      type: string
+      default: ""
+
+    - name: optimizer-channel
+      type: string
+      default: ""
+    - name: optimizer-plan
+      type: string
+      default: "full"
+
+    - name: predict-channel
+      type: string
+      default: ""
+    - name: cp4d-version
+      type: string
+      default: "5.1.3"
+
+    - name: facilities-channel
+      type: string
+      default: ""
+    - name: facilities-size
+      type: string
+      default: "small"
+
+    - name: assist-channel
+      type: string
+      default: ""
+
+    - name: manage-channel
+      type: string
+      default: ""
+    - name: manage-jdbc
+      type: string
+      default: "workspace-application"
+    - name: manage-components
+      type: string
+      default: "base=latest,health=latest,spatial=latest,strategize=latest,serviceprovider=latest,utilities=latest,hse=latest,aip=latest"
+    - name: enable-manage-demo-data
+      type: string
+      default: "false"
+    - name: manage-base-language
+      type: string
+      default: "EN"
+    - name: manage-server-timezone
+      type: string
+      default: "GMT"
+    - name: manage-jms
+      type: string
+      default: ""
+    - name: manage-server-bundle-size
+      type: string
+      default: ""
+    - name: manage-persistent-volumes
+      type: string
+      default: ""
+    
+    - name: visualinspection-channel
+      type: string
+      default: ""
+
+    # DB2
+    - name: db2-channel
+      type: string
+      default: ""
+    - name: db2-namespace
+      type: string
+      default: ""
+    - name: db2-type
+      type: string
+      default: "db2wh"
+    - name: db2-timezone
+      type: string
+      default: "GMT"
+    - name: db2-cpu-requests
+      type: string
+      default: "4000m"
+    - name: db2-cpu-limits
+      type: string
+      default: "6000m"
+    - name: db2-memory-requests
+      type: string
+      default: "8Gi"
+    - name: db2-memory-limits
+      type: string
+      default: "12Gi"
+    - name: db2-backup-storage
+      type: string
+      default: "200Gi"
+    - name: db2-data-storage
+      type: string
+      default: "500Gi"
+    - name: db2-logs-storage
+      type: string
+      default: "100Gi"
+    - name: db2-meta-storage
+      type: string
+      default: "100Gi"
+    - name: db2-temp-storage
+      type: string
+      default: "150Gi"
+
+    # Kafka
+    - name: kafka-provider
+      type: string
+      default: "strimzi"
+    - name: ibmcloud-apikey
+      type: string
+      default: ""
+    - name: eventstreams-name
+      type: string
+      default: ""
+    - name: eventstreams-resourcegroups
+      type: string
+      default: ""
+    - name: eventstreams-location
+      type: string
+      default: ""
+    
+    - name: use-letsencrypt-certs
+      type: string
+      default: "true"
+    - name: tlscert-secret
+      type: string
+      default: "user-serving-cert-000"
+    - name: tlscert-namespace
+      type: string
+      default: "openshift-kube-apiserver"
+
+  tasks:
+    - name: update-image-registry
+      taskRef:
+        name: update-image-registry
+      params:
+        - name: registry-storageclass
+          value: $(params.storage-rwx)
+
+    - name: get-ibm-entitlement-key
+      taskRef:
+        name: ibmcloud-secrets-manager-get
+        kind: Task
+      retries: 2
+      params:
+        - name: KEY_ID
+          value: 968d7819-f2c5-7b67-c420-3c6bfd51521e
+        - name: SECRETS_MANAGER_ENDPOINT_URL
+          value: >-
+            https://afa20521-cd75-4864-843f-e59fd0ffd49d.us-south.secrets-manager.appdomain.cloud
+
+    - name: get-maximo-license
+      taskRef:
+        name: get-maximo-license
+      workspaces:
+        - name: ws
+          workspace: ws
+
+    - name: get-tls-certs
+      runAfter:
+        - get-ibm-entitlement-key
+        - get-maximo-license
+      when:
+        - input: "$(params.use-letsencrypt-certs)"
+          operator: in
+          values: ["true"]
+      retries: 3
+      params:
+        - name: TLSCERT_SECRET_LOCATION
+          value: "$(params.tlscert-secret)"
+        - name: TLSCERT_SECRET_NAMESPACE
+          value: "$(params.tlscert-namespace)"
+      workspaces:
+        - name: ws
+      taskSpec:
+        workspaces:
+          - name: ws
+        params:
+          - name: TLSCERT_SECRET_LOCATION
+          - name: TLSCERT_SECRET_NAMESPACE
+        steps:
+          - name: get-tls-certs
+            image: quay.io/congxdev/ibm-pak-ubi:latest
+            script: |
+              ### this is the method to load certs to the mas installer
+              mkdir -p $(workspaces.ws.path)/masconfig/certs/core/
+              wget -qO - https://letsencrypt.org/certs/lets-encrypt-r3.pem > $(workspaces.ws.path)/masconfig/certs/core/ca.crt
+              oc get secret $(params.TLSCERT_SECRET_LOCATION) -n $(params.TLSCERT_SECRET_NAMESPACE) -o jsonpath="{.data['tls\.key']}" | base64 -d > $(workspaces.ws.path)/masconfig/certs/core/tls.key
+              oc get secret $(params.TLSCERT_SECRET_LOCATION) -n $(params.TLSCERT_SECRET_NAMESPACE) -o jsonpath="{.data['tls\.crt']}" | base64 -d > $(workspaces.ws.path)/masconfig/certs/core/tls.crt
+              ls $(workspaces.ws.path)/masconfig/certs/core/
+              cat $(workspaces.ws.path)/masconfig/certs/core/tls.key
+              cat $(workspaces.ws.path)/masconfig/certs/core/tls.crt
+
+              APPS="iot manage monitor add assist optimizer visualinspection predict aibroker facilities"
+
+              # copy to app directories
+              echo "Copying to app directories..."
+              for app in $APPS; do
+                mkdir -p $(workspaces.ws.path)/masconfig/certs/$app/
+                cp $(workspaces.ws.path)/masconfig/certs/core/* $(workspaces.ws.path)/masconfig/certs/$app/
+              done
+
+              exit
+
+    - name: run-install-mas
+      runAfter:
+        - get-maximo-license
+        - update-image-registry
+        - get-ibm-entitlement-key
+        - get-tls-certs
+      taskRef:
+        name: install-mas
+      workspaces:
+        - name: ws
+          workspace: ws
+      params:
+        - name: mas-catalog-version
+          value: $(params.mas-catalog-version)
+        - name: mas-channel
+          value: $(params.mas-channel)
+        - name: mas-instance-id
+          value: $(params.mas-instance-id)
+        - name: mas-workspace-id
+          value: $(params.mas-workspace-id)
+        - name: mas-workspace-name
+          value: $(params.mas-workspace-name)
+        - name: ibm-entitlement-key
+          value: $(tasks.get-ibm-entitlement-key.results.secret-value)
+        - name: license-file
+          value: $(workspaces.ws.path)/license.dat
+        - name: uds-email
+          value: $(params.uds-email)
+        - name: uds-firstname
+          value: $(params.uds-firstname)
+        - name: uds-lastname
+          value: $(params.uds-lastname)
+        - name: storage-rwo
+          value: $(params.storage-rwo)
+        - name: storage-rwx
+          value: $(params.storage-rwx)
+        - name: storage-pipeline
+          value: $(params.storage-pipeline)
+        - name: storage-accessmode
+          value: $(params.storage-accessmode)
+        - name: dro-namespace
+          value: $(params.dro-namespace)
+        - name: mongodb-namespace
+          value: $(params.mongodb-namespace)
+        - name: iot-channel
+          value: $(params.iot-channel)
+        - name: kafka-provider
+          value: $(params.kafka-provider)
+        - name: ibmcloud-apikey
+          value: $(params.ibmcloud-apikey)
+        - name: eventstreams-name
+          value: $(params.eventstreams-name)
+        - name: eventstreams-resourcegroups
+          value: $(params.eventstreams-resourcegroups)
+        - name: eventstreams-location
+          value: $(params.eventstreams-location)
+        - name: monitor-channel
+          value: $(params.monitor-channel)
+        - name: optimizer-channel
+          value: $(params.optimizer-channel)
+        - name: optimizer-plan
+          value: $(params.optimizer-plan)
+        - name: predict-channel
+          value: $(params.predict-channel)
+        - name: cp4d-version
+          value: $(params.cp4d-version)
+        - name: facilities-channel
+          value: $(params.facilities-channel)
+        - name: facilities-size
+          value: $(params.facilities-size)
+        - name: assist-channel
+          value: $(params.assist-channel)
+        - name: manage-channel
+          value: $(params.manage-channel)
+        - name: manage-jdbc
+          value: $(params.manage-jdbc)
+        - name: manage-components
+          value: $(params.manage-components)
+        - name: enable-manage-demo-data
+          value: $(params.enable-manage-demo-data)
+        - name: manage-base-language
+          value: $(params.manage-base-language)
+        - name: manage-server-timezone
+          value: $(params.manage-server-timezone)
+        - name: manage-jms
+          value: $(params.manage-jms)
+        - name: manage-persistent-volumes
+          value: $(params.manage-persistent-volumes)
+        - name: manage-server-bundle-size
+          value: $(params.manage-server-bundle-size)
+        - name: visualinspection-channel
+          value: $(params.visualinspection-channel)
+        - name: db2-channel
+          value: $(params.db2-channel)
+        - name: db2-namespace
+          value: $(params.db2-namespace)
+        - name: db2-type
+          value: $(params.db2-type)
+        - name: db2-timezone
+          value: $(params.db2-timezone)
+        - name: db2-cpu-requests
+          value: $(params.db2-cpu-requests)
+        - name: db2-cpu-limits
+          value: $(params.db2-cpu-limits)
+        - name: db2-memory-requests
+          value: $(params.db2-memory-requests)
+        - name: db2-memory-limits
+          value: $(params.db2-memory-limits)
+        - name: db2-backup-storage
+          value: $(params.db2-backup-storage)
+        - name: db2-data-storage
+          value: $(params.db2-data-storage)
+        - name: db2-logs-storage
+          value: $(params.db2-logs-storage)
+        - name: db2-meta-storage
+          value: $(params.db2-meta-storage)
+        - name: db2-temp-storage
+          value: $(params.db2-temp-storage)
+        - name: use-letsencrypt-certs
+          value: $(params.use-letsencrypt-certs)
