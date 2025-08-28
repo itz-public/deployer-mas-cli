@@ -9,13 +9,14 @@
             "tlscert-secret": "user-serving-cert-000",
             "tlscert-namespace": "openshift-kube-apiserver",
             "mas-channel": "9.1.x",
-            "mas-install-core": "true",
-            "mas-install-manage": "true",
-            "mas-install-demo-data": "true",
-            "mas-install-optimizer": "true",
-            "mas-install-monitor": "true",
-            "mas-install-iot": "true",
-            "mas-appws-components": "base=latest,health=latest,spatial=latest,strategize=latest,serviceprovider=latest,utilities=latest,hse=latest,aip=latest"
+            "mas-instance-id": "inst1",
+            "mas-workspace-id": "masdev",
+            "mas-workspace-name": "masdev",
+            "manage-channel": "9.1.x-dev",
+            "manage-components": "",
+            "monitor-channel": "9.1.x-dev",
+            "facilities-channel": "9.1.x-dev",
+            "facilities-size": "small"
         }
     },
     "certs": {

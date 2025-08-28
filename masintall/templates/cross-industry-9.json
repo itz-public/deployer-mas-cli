@@ -15,7 +15,7 @@
             "mas-install-optimizer": "true",
             "mas-install-monitor": "true",
             "mas-install-iot": "true",
-            "mas-appws-components": "base=latest,health=latest,spatial=latest,strategize=latest,serviceprovider=latest,utilities=latest,hse=latest,aip=latest"
+            "mas-appws-components": "base=latest,health=latest,spatial=latest,strategize=latest,civil=latest"
         }
     },
     "certs": {
