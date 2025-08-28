@@ -10,8 +10,8 @@
             "tlscert-namespace": "openshift-kube-apiserver",
             "mas-channel": "9.1.x",
             "mas-instance-id": "inst1",
-            "mas-workspace-id": "test",
-            "mas-workspace-name": "test"
+            "mas-workspace-id": "gtmdemo",
+            "mas-workspace-name": "ProductAssetsTeam",
         }
     },
     "certs": {
