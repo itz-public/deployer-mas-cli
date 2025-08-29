@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: mas-ind1-install-
+  namespace: default
+spec:
+  pipelineRef:
+    name: install-maximo-app-suite
+  params:
+    - name: storage-rwo
+      value: "ocs-external-storagecluster-ceph-rbd"
+    - name: storage-rwx
+      value: "ocs-external-storagecluster-cephfs"
+    - name: storage-pipeline
+      value: "ocs-external-storagecluster-cephfs"
+    - name: mas-instance-id
+      value: inst1
+    - name: mas-workspace-id
+      value: masdev
+    - name: mas-workspace-name
+      value: masdev
+    - name: manage-channel
+      value: "9.1.x"
+    - name: enable-manage-demo-data
+      value: "true"
+    - name: manage-components
+      value: "base=latest,health=latest,spatial=latest,strategize=latest,serviceprovider=latest,utilities=latest,hse=latest,aip=latest"
+    - name: mas-app-cfg-retries
+      value: "120"
+  workspaces:
+    - name: ws
+      volumeClaimTemplate:
+        metadata:
+          name: mas-install-workspace
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
