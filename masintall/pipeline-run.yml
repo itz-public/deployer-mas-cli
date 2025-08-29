@@ -1,11 +1,11 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  name: mas-ind1-install-9.1.x
+  generateName: mas-ind1-install-
   namespace: default
 spec:
   pipelineRef:
-    name: install-maximo-app-suite-9.1.x
+    name: install-maximo-app-suite
   params:
     - name: storage-rwo
       value: "ocs-external-storagecluster-ceph-rbd"
