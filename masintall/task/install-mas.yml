@@ -6,6 +6,9 @@ spec:
   workspaces:
     - name: ws
   params:
+    - name: cli-image-version
+      type: string
+      default: latest
     - name: mas-catalog-version
       type: string
       default: "v9-250731-amd64"
@@ -192,7 +195,7 @@ spec:
 
   steps:
     - name: install
-      image: quay.io/ibmmas/cli:15.1.14-pre.mascore-9033-amd64 # todo: change to latest once this get merged
+      image: quay.io/ibmmas/cli:$(params.cli-image-version)
       imagePullPolicy: Always
       script: |
         #!/bin/bash

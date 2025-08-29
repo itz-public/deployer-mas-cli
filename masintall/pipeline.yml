@@ -7,6 +7,9 @@ spec:
   workspaces:
     - name: ws
   params:
+    - name: cli-image-version
+      type: string
+      default: latest
     - name: mas-catalog-version
       type: string
       default: "v9-250731-amd64"
@@ -277,6 +280,8 @@ spec:
         - name: ws
           workspace: ws
       params:
+        - name: cli-image-version
+          value: $(params.cli-image-version)
         - name: mas-app-cfg-retries
           value: $(params.mas-app-cfg-retries)
         - name: mas-catalog-version
