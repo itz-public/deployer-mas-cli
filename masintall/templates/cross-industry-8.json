@@ -1,6 +1,6 @@
 {
     "deployer": {
-        "package": "deployer-mas-9.1.x",
+        "package": "deployer-mas",
         "params": {
             "rwx-storageclass": "ocs-external-storagecluster-cephfs",
             "rwo-storageclass": "ocs-external-storagecluster-cephfs",
