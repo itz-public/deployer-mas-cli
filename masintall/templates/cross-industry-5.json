@@ -12,9 +12,9 @@
             "mas-instance-id": "inst1",
             "mas-workspace-id": "gtmdemo",
             "mas-workspace-name": "ProductAssetsTeam",
-            "manage-channel": "9.1.x-dev",
+            "manage-channel": "9.1.x",
             "manage-components": "",
-            "visualinspection-channel": "9.1.x-dev"
+            "visualinspection-channel": "9.1.x"
         }
     },
     "certs": {
