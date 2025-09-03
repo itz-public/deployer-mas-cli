@@ -8,6 +8,7 @@
             "mas-catalog-version": "v9-250828-amd64",
             "tlscert-secret": "user-serving-cert-000",
             "tlscert-namespace": "openshift-kube-apiserver",
+            "cli-image-version": "latest",
             "mas-channel": "9.1.x",
             "mas-install-core": "true",
             "mas-install-manage": "true",
