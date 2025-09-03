@@ -13,7 +13,6 @@
             "mas-install-core": "true",
             "mas-install-manage": "true",
             "mas-install-demo-data": "true",
-            "mas-install-optimizer": "true",
             "mas-install-monitor": "true",
             "mas-install-iot": "true",
             "mas-appws-components": "base=latest,health=latest,spatial=latest,strategize=latest,civil=latest"
