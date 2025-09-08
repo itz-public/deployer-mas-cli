@@ -193,8 +193,53 @@ spec:
       type: string
       default: "true"
 
+    #### AI SERVICE ####
+    - name: aiservice-instance-id
+      type: string
+      default: "mas1"
+    - name: aiservice-channel
+      type: string
+      default: ""
+    - name: minio-passsword
+      type: string
+      default: ""
+    - name: minio-user
+      type: string
+      default: ""
+    - name: watsonxai-apikey
+      type: string
+      default: ""
+    - name: watsonxai-url
+      type: string
+      default: ""
+    - name: watsonxai-project-id
+      type: string
+      default: ""
+    - name: tenant-entitlement-type
+      type: string
+      default: "standard"
+    - name: tenant-entitlement-start-date
+      type: string
+      default: "2025-01-01"
+    - name: tenant-entitlement-end-date
+      type: string
+      default: "2026-01-01"
+    - name: rsl-url
+      type: string
+      default: ""
+    - name: rsl-org-id
+      type: string
+      default: ""
+    - name: rsl-token
+      type: string
+      default: ""
+    
+
+
+
+
   steps:
-    - name: install
+    - name: Install MAS 
       image: quay.io/ibmmas/cli:$(params.cli-image-version)
       imagePullPolicy: Always
       script: |
@@ -348,3 +393,60 @@ spec:
         echo "$CMD"
 
         eval "$CMD"
+    - name: Install AI Service
+      image: quay.io/ibmmas/cli:$(params.cli-image-version)
+      imagePullPolicy: Always
+      script: |
+        #!/bin/bash
+        # Verified empty vars
+
+        [[ "$(params.minio-user)" == "" ]] && exit 1
+        [[ "$(params.minio-password)" == "" ]] && exit 1
+        [[ "$(params.watsonxai-apikey)" == "" ]] && exit 1
+        [[ "$(params.watsonxai-url)" == "" ]] && exit 1
+        [[ "$(params.watsonxai-project-id)" == "" ]] && exit 1
+        [[ "$(params.tenant-entitlement-type)" == "" ]] && exit 1
+        [[ "$(params.tenant-entitlement-start-date)" == "" ]] && exit 1
+        [[ "$(params.tenant-entitlement-end-date)" == "" ]] && exit 1
+        [[ "$(params.rsl-url)" == "" ]] && exit 1
+        [[ "$(params.rsl-org-id)" == "" ]] && exit 1
+        [[ "$(params.rsl-token)" == "" ]] && exit 1
+
+
+        AISERVICE_CHANNEL=$(params.aiservice-channel)
+        if [[ AISERVICE_CHANNEL != "" ]]; then
+          CMD="mas aiservice-install"
+          CMD+=" --mas-catalog-version $(params.mas-catalog-version)"
+          CMD+=" --mas-channel $(params.mas-channel)"
+          CMD+=" --aiservice-instance-id $(params.aiservice-instance-id)"
+          CMD+=" --ibm-entitlement-key $(params.ibm-entitlement-key)"
+          CMD+=" --license-file \"$(params.license-file)\""
+          CMD+=" --uds-email \"$(params.uds-email)\""
+          CMD+=" --uds-firstname \"$(params.uds-firstname)\""
+          CMD+=" --uds-lastname \"$(params.uds-lastname)\""
+          CMD+=" --storage-class-rwo \"$(params.storage-rwo)\""
+          CMD+=" --storage-class-rwx \"$(params.storage-rwx)\""
+          CMD+=" --storage-pipeline \"$(params.storage-pipeline)\""
+          CMD+=" --storage-accessmode \"$(params.storage-accessmode)\""
+          CMD+=" --dro-namespace $(params.dro-namespace)"
+          CMD+=" --mongodb-namespace $(params.mongodb-namespace)"
+          CMD+=" --aiservice-channel $(params.aiservice-channel)"         
+          CMD+=" --install-minio"
+          CMD+=" --minio-root-user $(params.minio-user)"
+          CMD+=" --minio-root-password $(params.minio-password)"
+          CMD+=" --watsonxai-apikey $(params.watsoxai-apikey)"
+          CMD+=" --watsonxai-url $(params.watsoxai-url)"
+          CMD+=" --watsonxai-project-id $(params.watsoxai-project-id)"
+          CMD+=" --tenant-entitlement-type $(params.tenant-entitlement-type)"
+          CMD+=" --tenant-entitlement-start-date $(params.tenant-entitlement-start-date)"
+          CMD+=" --tenant-entitlement-end-date $(params.tenant-entitlement-end-date)"
+          CMD+=" --rsl-url $(params.rsl-url)"
+          CMD+=" --rsl-org-id $(params.rsl-org-id)"
+          CMD+=" --rsl-token 'Bearer $(params.rsl-token)'"
+          CMD+=" --accept-license --image-pull-policy Always --skip-pre-check --no-confirm;"
+
+          echo "$CMD"
+
+          eval "$CMD"
+        fi
+
