@@ -398,7 +398,7 @@ spec:
       imagePullPolicy: Always
       script: |
         #!/bin/bash
-        # Verified empty vars
+        # Verify empty vars
 
         [[ "$(params.minio-user)" == "" ]] && exit 1
         [[ "$(params.minio-password)" == "" ]] && exit 1
