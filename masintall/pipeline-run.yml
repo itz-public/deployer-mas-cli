@@ -20,13 +20,13 @@ spec:
     - name: mas-workspace-name
       value: masdev
     - name: manage-channel
-      value: "9.1.x"
+      value: "9.0.x"
+    - name: mas-channel
+      value: "9.0.x"
     - name: enable-manage-demo-data
       value: "true"
     - name: manage-components
       value: "base=latest,health=latest,spatial=latest,strategize=latest,serviceprovider=latest,utilities=latest,hse=latest,aip=latest"
-    - name: mas-app-cfg-retries
-      value: "120"
   workspaces:
     - name: ws
       volumeClaimTemplate:

@@ -38,7 +38,8 @@
             "*.predict.inst1.apps",
             "*.api.predict.inst1.apps",
             "*.visualinspection.inst1.apps",
-            "*.api.visualinspection.inst1.apps"
+            "*.api.visualinspection.inst1.apps",
+            "*.appconfig.inst1.apps"
         ]
     }
 }
