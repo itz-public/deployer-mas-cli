@@ -201,7 +201,7 @@ spec:
     - name: aiservice-channel
       type: string
       default: ""
-    - name: minio-passsword
+    - name: minio-password
       type: string
       default: ""
     - name: minio-user
@@ -436,7 +436,7 @@ spec:
           value: $(params.aiservice-instance-id)
         - name: aiservice-channel
           value: $(params.aiservice-channel)
-        - name: minio-passsword
+        - name: minio-password
           value: $(params.minio-password)
         - name: minio-user
           value: $(params.minio-user)

@@ -200,7 +200,7 @@ spec:
     - name: aiservice-channel
       type: string
       default: ""
-    - name: minio-passsword
+    - name: minio-password
       type: string
       default: ""
     - name: minio-user
@@ -235,7 +235,7 @@ spec:
       default: ""
 
   steps:
-    - name: Install MAS 
+    - name: install-mas
       image: quay.io/ibmmas/cli:$(params.cli-image-version)
       imagePullPolicy: Always
       script: |
@@ -326,7 +326,7 @@ spec:
           CMD+=" --manage-channel $MAS_APP_CHANNEL_MANAGE"
           CMD+=" --db2-manage"
           CMD+=" --manage-jdbc $(params.manage-jdbc)"
-          CMD+=" --manage-components $(params.manage-components)"
+          CMD+=" --manage-components '$(params.manage-components)'"
 
           ENABLE_DEMO_DATA="$(params.enable-manage-demo-data)"
           if [[ "$ENABLE_DEMO_DATA" == "true" ]]; then
@@ -389,31 +389,27 @@ spec:
         echo "$CMD"
 
         eval "$CMD"
-    - name: Install AI Service
+    - name: install-ai-service
       image: quay.io/ibmmas/cli:$(params.cli-image-version)
       imagePullPolicy: Always
       script: |
         #!/bin/bash
         # Verify empty vars
 
-        [[ "$(params.minio-user)" == "" ]] && exit 1
-        [[ "$(params.minio-password)" == "" ]] && exit 1
-        [[ "$(params.watsonxai-apikey)" == "" ]] && exit 1
-        [[ "$(params.watsonxai-url)" == "" ]] && exit 1
-        [[ "$(params.watsonxai-project-id)" == "" ]] && exit 1
-        [[ "$(params.tenant-entitlement-type)" == "" ]] && exit 1
-        [[ "$(params.tenant-entitlement-start-date)" == "" ]] && exit 1
-        [[ "$(params.tenant-entitlement-end-date)" == "" ]] && exit 1
-        [[ "$(params.rsl-url)" == "" ]] && exit 1
-        [[ "$(params.rsl-org-id)" == "" ]] && exit 1
-        [[ "$(params.rsl-token)" == "" ]] && exit 1
+        [[ "$(params.minio-user)" == "" ]] && echo "Missing minio user" && exit 1
+        [[ "$(params.minio-password)" == "" ]] && echo "Missing minio password" && exit 1
+        [[ "$(params.watsonxai-apikey)" == "" ]] && echo "Missing watsonX apikey" && exit 1
+        [[ "$(params.watsonxai-url)" == "" ]] && echo "Missing watsonX url" && exit 1
+        [[ "$(params.watsonxai-project-id)" == "" ]] && echo "Missing watsonX project id" && exit 1
+        [[ "$(params.tenant-entitlement-type)" == "" ]] && echo "Missing entitlement type" && exit 1
+        [[ "$(params.tenant-entitlement-start-date)" == "" ]] && echo "Missing entitlement start date" && exit 1
+        [[ "$(params.tenant-entitlement-end-date)" == "" ]] && echo "Missing entitlement end date" && exit 1
 
 
         AISERVICE_CHANNEL=$(params.aiservice-channel)
         if [[ AISERVICE_CHANNEL != "" ]]; then
           CMD="mas aiservice-install"
           CMD+=" --mas-catalog-version $(params.mas-catalog-version)"
-          CMD+=" --mas-channel $(params.mas-channel)"
           CMD+=" --aiservice-instance-id $(params.aiservice-instance-id)"
           CMD+=" --ibm-entitlement-key $(params.ibm-entitlement-key)"
           CMD+=" --license-file \"$(params.license-file)\""
@@ -430,15 +426,32 @@ spec:
           CMD+=" --install-minio"
           CMD+=" --minio-root-user $(params.minio-user)"
           CMD+=" --minio-root-password $(params.minio-password)"
-          CMD+=" --watsonxai-apikey $(params.watsoxai-apikey)"
-          CMD+=" --watsonxai-url $(params.watsoxai-url)"
-          CMD+=" --watsonxai-project-id $(params.watsoxai-project-id)"
+          CMD+=" --watsonxai-apikey $(params.watsonxai-apikey)"
+          CMD+=" --watsonxai-url $(params.watsonxai-url)"
+          CMD+=" --watsonxai-project-id $(params.watsonxai-project-id)"
           CMD+=" --tenant-entitlement-type $(params.tenant-entitlement-type)"
           CMD+=" --tenant-entitlement-start-date $(params.tenant-entitlement-start-date)"
           CMD+=" --tenant-entitlement-end-date $(params.tenant-entitlement-end-date)"
-          CMD+=" --rsl-url $(params.rsl-url)"
-          CMD+=" --rsl-org-id $(params.rsl-org-id)"
-          CMD+=" --rsl-token 'Bearer $(params.rsl-token)'"
+
+          USE_MANUAL_CERTS=$(params.use-letsencrypt-certs)
+          if [[ "$USE_MANUAL_CERTS" == "true" ]]; then
+            CMD+=" --manual-certificates $(workspaces.ws.path)/masconfig/certs"
+          fi
+          
+          # Optional for AI Service
+          RSL_URL=$(params.rsl-url)
+          if [[ $RSL_URL != "" ]]; then
+            CMD+=" --rsl-url $(params.rsl-url)"
+          fi
+          RSL_ORG_ID=$(params.rsl-org-id)
+          if [[ $RSL_ORG_ID != "" ]]; then
+            CMD+=" --rsl-org-id $(params.rsl-org-id)"
+          fi
+          RSL_TOKEN=$(params.rsl-token)
+          if [[ $RSL_TOKEN != "" ]]; then
+            CMD+=" --rsl-token 'Bearer $(params.rsl-token)'"
+          fi 
+          
           CMD+=" --accept-license --image-pull-policy Always --skip-pre-check --no-confirm;"
 
           echo "$CMD"
