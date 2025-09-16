@@ -194,6 +194,46 @@ spec:
     - name: tlscert-namespace
       type: string
       default: "openshift-kube-apiserver"
+    #### AI SERVICE ####
+    - name: aiservice-instance-id
+      type: string
+      default: "mas1"
+    - name: aiservice-channel
+      type: string
+      default: ""
+    - name: minio-password
+      type: string
+      default: ""
+    - name: minio-user
+      type: string
+      default: ""
+    - name: watsonxai-apikey
+      type: string
+      default: ""
+    - name: watsonxai-url
+      type: string
+      default: ""
+    - name: watsonxai-project-id
+      type: string
+      default: ""
+    - name: tenant-entitlement-type
+      type: string
+      default: "standard"
+    - name: tenant-entitlement-start-date
+      type: string
+      default: "2025-01-01"
+    - name: tenant-entitlement-end-date
+      type: string
+      default: "2026-01-01"
+    - name: rsl-url
+      type: string
+      default: ""
+    - name: rsl-org-id
+      type: string
+      default: ""
+    - name: rsl-token
+      type: string
+      default: ""
 
   tasks:
     - name: update-image-registry
@@ -392,3 +432,29 @@ spec:
           value: $(params.db2-temp-storage)
         - name: use-letsencrypt-certs
           value: $(params.use-letsencrypt-certs)
+        - name: aiservice-instance-id
+          value: $(params.aiservice-instance-id)
+        - name: aiservice-channel
+          value: $(params.aiservice-channel)
+        - name: minio-password
+          value: $(params.minio-password)
+        - name: minio-user
+          value: $(params.minio-user)
+        - name: watsonxai-apikey
+          value: $(params.watsonxai-apikey)
+        - name: watsonxai-url
+          value: $(params.watsonxai-url)
+        - name: watsonxai-project-id
+          value: $(params.watsonxai-project-id)
+        - name: tenant-entitlement-type
+          value: $(params.tenant-entitlement-type)
+        - name: tenant-entitlement-start-date
+          value: $(params.tenant-entitlement-start-date)
+        - name: tenant-entitlement-end-date
+          value: $(params.tenant-entitlement-end-date)
+        - name: rsl-url
+          value: $(params.rsl-url)
+        - name: rsl-org-id
+          value: $(params.rsl-org-id)
+        - name: rsl-token
+          value: $(params.rsl-token)
