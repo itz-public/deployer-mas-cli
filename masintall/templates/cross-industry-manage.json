@@ -1,6 +1,6 @@
 {
     "deployer": {
-        "package": "deployer-mas-9.1.x",
+        "package": "deployer-mas",
         "params": {
             "storage-rwx": "ocs-external-storagecluster-cephfs",
             "storage-rwo": "ocs-external-storagecluster-cephfs",
@@ -8,6 +8,7 @@
             "mas-catalog-version": "v9-250828-amd64",
             "tlscert-secret": "user-serving-cert-000",
             "tlscert-namespace": "openshift-kube-apiserver",
+            "cli-image-version": "latest",
             "mas-channel": "9.1.x",
             "mas-instance-id": "inst1",
             "mas-workspace-id": "gtmdemo",
@@ -37,7 +38,8 @@
             "*.predict.inst1.apps",
             "*.api.predict.inst1.apps",
             "*.visualinspection.inst1.apps",
-            "*.api.visualinspection.inst1.apps"
+            "*.api.visualinspection.inst1.apps",
+            "*.appconfig.inst1.apps"
         ]
     }
 }
