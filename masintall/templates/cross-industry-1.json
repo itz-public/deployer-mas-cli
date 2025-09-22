@@ -17,6 +17,7 @@
             "mas-instance-id": "inst1",
             "mas-workspace-id": "gtmdemo",
             "mas-workspace-name": "ProductAssetsTeam",
+            "manage-jms": "true",
             "mas-appws-components": "base=latest,health=latest,spatial=latest,strategize=latest,serviceprovider=latest,utilities=latest,hse=latest,aip=latest"
         }
     },

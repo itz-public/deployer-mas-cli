@@ -10,13 +10,11 @@
             "tlscert-namespace": "openshift-kube-apiserver",
             "cli-image-version": "latest",
             "mas-channel": "9.1.x",
-            "mas-install-core": "true",
-            "mas-install-manage": "true",
-            "mas-install-demo-data": "true",
-            "mas-install-monitor": "true",
-            "mas-install-iot": "true",
-            "manage-jms": "true",
-            "mas-appws-components": "base=latest,health=latest,spatial=latest,strategize=latest,civil=latest"
+            "mas-instance-id": "inst1",
+            "mas-workspace-id": "gtmdemo",
+            "mas-workspace-name": "ProductAssetsTeam",
+            "manage-channel": "9.1.x",
+            "manage-components": "icd=latest"
         }
     },
     "certs": {

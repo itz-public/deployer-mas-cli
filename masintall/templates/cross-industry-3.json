@@ -17,6 +17,7 @@
             "enable-manage-demo-data": "true",
             "monitor-channel": "9.1.x",
             "iot-channel": "9.1.x",
+            "manage-jms": "true",
             "manage-components": "base=latest,health=latest,spatial=latest,strategize=latest,nuclear=latest"
         }
     },

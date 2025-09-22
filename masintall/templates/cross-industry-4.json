@@ -19,6 +19,7 @@
             "iot-channel": "9.1.x",
             "facilities-channel": "9.1.x",
             "facilities-size": "small",
+            "manage-jms": "true",
             "manage-components": "base=latest,health=latest,spatial=latest,strategize=latest,hse=latest,transportation=latest"
         }
     },
