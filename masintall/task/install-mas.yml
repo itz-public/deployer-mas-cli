@@ -432,7 +432,7 @@ spec:
           CMD+=" --tenant-entitlement-type $(params.tenant-entitlement-type)"
           CMD+=" --tenant-entitlement-start-date $(params.tenant-entitlement-start-date)"
           CMD+=" --tenant-entitlement-end-date $(params.tenant-entitlement-end-date)"
-          CMD+=" --additional-config "$(workspaces.ws.path)/masconfig"
+          CMD+=" --additional-configs "$(workspaces.ws.path)/masconfig"
 
           USE_MANUAL_CERTS=$(params.use-letsencrypt-certs)
           if [[ "$USE_MANUAL_CERTS" == "true" ]]; then
