@@ -16,7 +16,7 @@
             "mas-install-monitor": "true",
             "mas-install-iot": "true",
             "manage-jms": "true",
-            "mas-appws-components": "base=latest,health=latest,spatial=latest,strategize=latest,civil=latest"
+            "manage-components": "base=latest,health=latest,spatial=latest,strategize=latest,civil=latest"
         }
     },
     "certs": {
