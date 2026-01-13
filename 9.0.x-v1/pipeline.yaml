@@ -161,7 +161,7 @@ spec:
         - set-retrieved-entitlement-key
       params:
         - name: KEY_ID
-          value: 5ef410aa-bd48-3339-0096-d2b11e91cb57
+          value: 22fd813a-220c-2467-52b3-6c1106ced45a
         - name: SECRETS_MANAGER_ENDPOINT_URL
           value: >-
             https://afa20521-cd75-4864-843f-e59fd0ffd49d.us-south.secrets-manager.appdomain.cloud
@@ -511,7 +511,3 @@ spec:
               export MAS_CHANNEL=$(params.mas-channel)
 
               ansible-playbook ibm.mas_devops.oneclick_add_monitor
-
-
-
-
