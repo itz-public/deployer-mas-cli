@@ -154,7 +154,7 @@ spec:
         - set-retrieved-entitlement-key
       params:
         - name: KEY_ID
-          value: 22fd813a-220c-2467-52b3-6c1106ced45a
+           value: c4cde1db-8242-81b5-cb25-14e352153afe
         - name: SECRETS_MANAGER_ENDPOINT_URL
           value: >-
             https://afa20521-cd75-4864-843f-e59fd0ffd49d.us-south.secrets-manager.appdomain.cloud

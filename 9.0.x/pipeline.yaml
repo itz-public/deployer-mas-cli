@@ -6,9 +6,9 @@ metadata:
   namespace: default
 spec:
   workspaces:
-    - name: ws
+  - name: ws
   params:
-    - name: mas-instance-id
+  - name: mas-instance-id
       type: string
       default: "inst1"
     - name: mas-workspace-id
@@ -252,14 +252,14 @@ spec:
       retries: 2
       workspaces:
         - name: ws
-      params:
-        - name: KEY_ID
-          value: 22fd813a-220c-2467-52b3-6c1106ced45a
-        - name: SECRETS_MANAGER_ENDPOINT_URL
-          value: >-
-            https://afa20521-cd75-4864-843f-e59fd0ffd49d.us-south.secrets-manager.appdomain.cloud
-        - name: LICENSE_FILE_SECRET_NAME
-          value: "$(params.license-file-secret-name)"
+       params:
+         - name: KEY_ID
+           value: c4cde1db-8242-81b5-cb25-14e352153afe
+         - name: SECRETS_MANAGER_ENDPOINT_URL
+           value: >-
+             https://afa20521-cd75-4864-843f-e59fd0ffd49d.us-south.secrets-manager.appdomain.cloud
+         - name: LICENSE_FILE_SECRET_NAME
+           value: "$(params.license-file-secret-name)"
       taskSpec:
         workspaces:
           - name: ws
