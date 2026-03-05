@@ -234,6 +234,9 @@ spec:
     - name: rsl-token
       type: string
       default: ""
+    - name: skip-grafana-install
+      type: string
+      default: "false"
 
   tasks:
     - name: update-image-registry
@@ -464,3 +467,5 @@ spec:
           value: $(params.rsl-org-id)
         - name: rsl-token
           value: $(params.rsl-token)
+        - name: skip-grafana-install
+          value: $(params.skip-grafana-install)
