@@ -380,6 +380,11 @@ spec:
           CMD+=" --manual-certificates $(workspaces.ws.path)/masconfig/certs"
         fi
 
+        SKIP_GRAFANA="$(params.skip-grafana-install)"
+        if [[ "$SKIP_GRAFANA" == "true" ]]; then
+          CMD+=" --skip-grafana-install"
+        fi
+
         # Final flags
         CMD+=" --accept-license"
         CMD+=" --no-confirm"
