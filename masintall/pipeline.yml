@@ -317,6 +317,17 @@ spec:
 
               exit
 
+    - name: cleanup-old-catalog
+      runAfter: 
+        - get-tls-certs
+      taskSpec:
+        steps:
+          - name: cleanup-old-catalog
+            image: quay.io/congxdev/ibm-pak-ubi:latest
+            script: |
+              #### Cleanup any old ibm-catalogs
+              oc delete catalogsource/ibm-operator-catalog -n openshift-marketplace --force --grace-period=0
+
     - name: run-install-mas
       runAfter:
         - get-maximo-license
