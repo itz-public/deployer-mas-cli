@@ -335,6 +335,7 @@ spec:
         - update-image-registry
         - get-ibm-entitlement-key
         - get-tls-certs
+        - cleanup-old-catalog
       taskRef:
         name: install-mas
       workspaces:
