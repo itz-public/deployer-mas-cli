@@ -194,6 +194,7 @@ spec:
     - name: tlscert-namespace
       type: string
       default: "openshift-kube-apiserver"
+
     #### AI SERVICE ####
     - name: aiservice-instance-id
       type: string
