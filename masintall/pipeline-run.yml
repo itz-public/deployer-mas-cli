@@ -27,6 +27,8 @@ spec:
       value: "base=latest,health=latest,spatial=latest,strategize=latest,serviceprovider=latest,utilities=latest,hse=latest,aip=latest"
     - name: mas-app-cfg-retries
       value: "120"
+    - name: admin-mode
+      value: "cluster"
   workspaces:
     - name: ws
       volumeClaimTemplate:
