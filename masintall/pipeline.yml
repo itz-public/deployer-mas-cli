@@ -238,6 +238,9 @@ spec:
     - name: skip-grafana-install
       type: string
       default: "false"
+    - name: admin-mode
+      type: string
+      default: "cluster"
 
   tasks:
     - name: update-image-registry
@@ -480,5 +483,7 @@ spec:
           value: $(params.rsl-org-id)
         - name: rsl-token
           value: $(params.rsl-token)
+        - name: admin-mode
+          value: $(params.admin-mode)
         - name: skip-grafana-install
           value: $(params.skip-grafana-install)
